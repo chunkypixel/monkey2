@@ -14,11 +14,11 @@ Using std..
 
 ' Globals
 Global window:PacmanWindow
-Global DisplayOffset:=New Vec2i(32,0)
+Global DisplayOffset:=New Vec2i(0,0)
 
 Function Main()
 	New AppInstance()
-	window = New PacmanWindow("Pacman", 640, 480, WindowFlags.Resizable)	'WindowFlags.Resizable)
+	window = New PacmanWindow("Pacman", 640, 480, WindowFlags.Resizable)	'Fullscreen/Resizable
 	App.Run()
 End
 
@@ -33,11 +33,14 @@ Class PacmanWindow Extends Window
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
 		Super.New(title, width, height, flags)
-		'Layout = "letterbox"
 		ClearColor = Color.Black
 		Mouse.PointerVisible=False
-		'SwapInterval=60
-			
+		
+		'Virtual Resolution
+		Layout = "letterbox"
+		MinSize=New Vec2i(224,288)
+		'SwapInterval=0	
+		
 		' Setup
 		InitialiseSprites()
 		InitialiseGrid()
@@ -52,10 +55,6 @@ Class PacmanWindow Extends Window
 		' Update
 		UpdateSprites()
 		
-		'Double ScreenSize
-		'canvas.BlendMode=BlendMode.Alpha
-		'canvas.Scale(1.5,1.5)
-		
 		' Render
 		App.RequestRender()
 		RenderGrid(canvas)		
@@ -69,11 +68,7 @@ Class PacmanWindow Extends Window
 		DrawFont(canvas,"HIGH SCORE",72,0,Color.White)
 		
 		'System
-		canvas.Color=Color.White
-		If (ShowFPS) DrawFont(canvas,"FPS-" + App.FPS,0,240,Color.White)
-		'If (IsDebug) DrawFont(canvas," T-"+Red.Tile.X+"x"+Red.Tile.Y, 0, 15)
-		'If (IsDebug) DrawFont(canvas,"AT-"+Red.Tile.X+"x"+Red.Tile.Y, 0, 30)
-		'If (IsDebug) DrawFont(canvas,"Dir-"+Yellow.Dir,0,45)
+		If (ShowFPS) DrawFont(canvas,"FPS-" + App.FPS,0,16,Color.White)
 		
 	End Method
 	

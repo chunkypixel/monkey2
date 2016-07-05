@@ -1,6 +1,10 @@
 Namespace pacman
 
-'Assets
+'DEV NOTES
+'-update ghost movement to determine next move from prior tile and store for use on next 'Centering'
+'-Allow objects to exit 'offscreen' before flipping when in tunnels
+'-create a 'game' class to track game-related states such as dot counters and ghost modes
+
 'Sprites
 #Import "../images/yellow.png"
 #Import "../images/redt.png"
@@ -116,6 +120,7 @@ Class Sprite
 	Field Scale:=New Vec2f( 1,1 )
 	Field Enabled:Bool=True
 	Field Dir:Int=Direction.Up
+	Field NextDir:Int=Direction.Up
 	Field PrevDir:Int=Direction.Up
 	Field Speed:Float=1.0
 	
@@ -263,14 +268,15 @@ Class GhostSprite Extends Sprite
 	Method GetTargetTile:Vec2i() Abstract
 	
 	Method Update() Override
-		'Debug
+		'Debugging
 		If (Not window.MoveGhosts) return
 
 		'Get current position
 		Local moveX:Float=Self.X
 		Local moveY:Float=Self.Y
 		
-		'Determine required IsCentre offset
+		'Determine required IsCentreTile xTileOffset
+		'Allows use to utilise the existing tile system inside the Pen
 		Local xTileOffset:Int=4
 		Select Self.Mode
 			Case GhostMode.Pen,GhostMode.LeavePen
@@ -307,12 +313,15 @@ Class GhostSprite Extends Sprite
 			Self.ReverseDirection=False
 		End 
 
-		'In a tunnel?
+		'Is in tunnel?
+		'TODO: need to allow object to exit 'offscreen' before flipping
 		If (isCentreTile And Self.Tile.X>=GridWidth-1 And Self.Dir=Direction.Right)
+			'Move to left
 			Self.SetPosition(0,Self.Tile.Y,0,4)
 			moveX=Self.X
 			moveY=Self.Y
-		Elseif (isCentreTile And Self.Tile.X<=0 And Self.Dir=Direction.Left) 
+		Elseif (isCentreTile And Self.Tile.X<=0 And Self.Dir=Direction.Left)
+			'Move to right 
 			Self.SetPosition(GridWidth-1,Self.Tile.Y,7,4)
 			moveX=Self.X
 			moveY=Self.Y
@@ -345,8 +354,9 @@ Class GhostSprite Extends Sprite
 						Self.Dir=Direction.Up
 					Else
 						'Left pen
-						'TODO: If ghost mode changes when inside pen then will move right on exit
-						Self.Dir=Self.ExitPenDir
+						'If ghost mode changes when inside pen then we can move right on next centering
+						Self.Dir=Direction.Left
+						Self.NextDir=Self.ExitPenDir
 						Self.Mode=GhostMode.Chase
 					End
 
@@ -366,25 +376,17 @@ Class GhostSprite Extends Sprite
 							Local oppositeDir:Int=(Self.Dir+2) Mod 4
 							Local oppositePrevDir:Int=(Self.PrevDir+2) Mod 4
 							
-							'Is current dir available
-							Local isCurrentDirAvailable:Bool=Self.CanMoveDirection(nextTile,Self.Dir)
-							
 							'Determine best available direction (order Up, Left, Down, Right)
 							Local targetDir:Int=-1
 							Local targetDistance:Int=-1
-							Local targetCount:Int=0
 							For Local dir:Int=0 To 3
 								'Validate (exclude opposite direction to current)
 								Local checkTargetDistance:Int=Self.FindTargetDistance(nextTile,targetTile,dir)
 								If (checkTargetDistance>=0 And (checkTargetDistance<targetDistance Or targetDistance<0) And dir<>oppositeDir And dir<>oppositePrevDir)
 									targetDistance=checkTargetDistance
 									targetDir=dir
-									targetCount+=1
 								End
 							Next
-
-							'Is current dir available and do we not have a least 2 directions available
-							If (isCurrentDirAvailable And targetCount<=2) targetDir=Self.Dir
 							
 							'Set
 							Self.SetDirection(targetDir)
@@ -475,8 +477,8 @@ Private
 	
 	Method GetDistanceToTarget:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		'First will return total tiles (larger), second will return distance
-		Return ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
-    	'Return (Sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)))
+		'Return ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
+    	Return (Sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)))
 	End
 	
 End
