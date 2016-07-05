@@ -35,10 +35,10 @@ End
 Function InitialiseSprites()
 	'Objects
 	Yellow=New PacmanSprite("asset::yellow.png")
-	Red=New BlinkyGhostSprite("asset::redt.png",New Vec2f(25,0))
-	Pink=New PinkyGhostSprite("asset::pinkt.png",New Vec2f(2,0))
-	Orange=New ClydeGhostSprite("asset::oranget.png",New Vec2f(0,35))
-	Cyan=New InkyGhostSprite("asset::cyant.png",New Vec2f(27,35))
+	Red=New BlinkyGhostSprite("asset::redt.png",New Vec2i(25,0))
+	Pink=New PinkyGhostSprite("asset::pinkt.png",New Vec2i(2,0))
+	Orange=New ClydeGhostSprite("asset::oranget.png",New Vec2i(0,35))
+	Cyan=New InkyGhostSprite("asset::cyant.png",New Vec2i(27,35))
 	
 	'Testing
 	'Yellow.SetPosition(5,17)
@@ -127,8 +127,8 @@ Class Sprite
 		Sprites.Push(Self)
 	End
 	
-	Property Tile:Vec2f()
-		Return New Vec2f(Int((Self.X)/8),Int((Self.Y)/8))
+	Property Tile:Vec2i()
+		Return New Vec2i(Int((Self.X)/8),Int((Self.Y)/8))
 	End
 	
 	Method Reset() Abstract
@@ -216,7 +216,7 @@ Class Sprite
 		Return ((Int(x) Mod 8)=xOffset And (Int(y) Mod 8)=4)
 	End
 	
-	Method GetNewDirection:Int(tile:Vec2f)
+	Method GetNewDirection:Int(tile:Vec2i)
 		'Validate
 		If (Grid[0,tile.X,tile.Y-1]=0 And Self.Dir<>Direction.Down And Self.PrevDir<>Direction.Down)
 			Return Direction.Up
@@ -228,7 +228,7 @@ Class Sprite
 		Return Direction.Right
 	End
 		
-	Method CanMoveDirection:Bool(tile:Vec2f,moveDir:Int)
+	Method CanMoveDirection:Bool(tile:Vec2i,moveDir:Int)
 		'Validate
 		Select moveDir
 			Case Direction.Up
@@ -246,7 +246,7 @@ Class Sprite
 End
 
 Class GhostSprite Extends Sprite
-	Field ScatterTargetTile:=New Vec2f(0,0)
+	Field ScatterTargetTile:=New Vec2i(0,0)
 	Field Mode:Int=GhostMode.Chase
 	Field ReverseDirection:Bool=False
 	Field ExitPenDir:Int=Direction.Left
@@ -254,13 +254,13 @@ Class GhostSprite Extends Sprite
 	Field ReleaseOnDot:Int=0
 	Field DotCounterActive:Bool=False
 	
-	Method New(image:string,scatterTargetTile:Vec2f)
+	Method New(image:string,scatterTargetTile:Vec2i)
 		Super.New(image)
 		Self.ScatterTargetTile=scatterTargetTile
 	End
 		
 	'Provide Ghost Specific Targetting
-	Method GetTargetTile:Vec2f() Abstract
+	Method GetTargetTile:Vec2i() Abstract
 	
 	Method Update() Override
 		'Debug
@@ -300,7 +300,7 @@ Class GhostSprite Extends Sprite
 			Local reverseDir:Int=(Self.Dir+2) Mod 4
 			
 			'Validate (if in a corner a straight reverse may not work)
-			If (Not CanMoveDirection(Self.Tile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
+			If (Not Self.CanMoveDirection(Self.Tile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
 			
 			'Update
 			Self.SetDirection(reverseDir)
@@ -319,7 +319,7 @@ Class GhostSprite Extends Sprite
 		End	
 
 		'Prepare	
-		Local nextTile:=New Vec2f(Int((moveX)/8),Int((moveY)/8))
+		Local nextTile:=New Vec2i(Int((moveX)/8),Int((moveY)/8))
 		
 		'Movement
 		Select Self.Mode
@@ -359,7 +359,7 @@ Class GhostSprite Extends Sprite
 					Select Self.Mode
 						Case GhostMode.Chase,GhostMode.Scatter,GhostMode.ReturnPen
 							'Determine target
-							Local targetTile:Vec2f=GetTargetTile()
+							Local targetTile:Vec2i=GetTargetTile()
 
 							'Get opposite of current dir
 							'We need to exclude direction we are coming from
@@ -443,7 +443,7 @@ Class GhostSprite Extends Sprite
 	End
 		
 Private
-	Method FindTargetDistance:Int(tile:Vec2f,targetTile:Vec2f,dirToTarget:Int)		
+	Method FindTargetDistance:Int(tile:Vec2i,targetTile:Vec2i,dirToTarget:Int)		
 		'Validate (special zones where ghost cannot move up)
 		Local canMoveUp:Bool=True
 		Select Self.Mode
@@ -483,19 +483,19 @@ End
 
 Class BlinkyGhostSprite Extends GhostSprite
 
-	Method New(image:string,scatterTargetTile:Vec2f)
+	Method New(image:string,scatterTargetTile:Vec2i)
 		Super.New(image,scatterTargetTile)
 		Self.Reset()
 	End
 	
-	Method GetTargetTile:Vec2f() Override
-		local targetTile:Vec2f=Yellow.Tile
+	Method GetTargetTile:Vec2i() Override
+		local targetTile:Vec2i=Yellow.Tile
 		Select Self.Mode
 			case GhostMode.Scatter
 				targetTile=ScatterTargetTile
 				
 			Case GhostMode.ReturnPen
-				targetTile=New Vec2f(14,14)
+				targetTile=New Vec2i(14,14)
 		End
 		Return targetTile
 	End
@@ -513,14 +513,14 @@ End
 
 Class PinkyGhostSprite Extends GhostSprite
 
-	Method New(image:string,scatterTargetTile:Vec2f)
+	Method New(image:string,scatterTargetTile:Vec2i)
 		Super.New(image,scatterTargetTile)
 		Self.Reset()
 	End
 	
-	Method GetTargetTile:Vec2f() Override
+	Method GetTargetTile:Vec2i() Override
 		'Target pacman by default
-		local targetTile:Vec2f=Yellow.Tile
+		local targetTile:Vec2i=Yellow.Tile
 		
 		'Validate
 		select Self.Mode
@@ -529,14 +529,14 @@ Class PinkyGhostSprite Extends GhostSprite
 				Select Yellow.Dir
 					Case Direction.Up
 						'Pacman bug - when up also left
-						targetTile=New Vec2f(Yellow.Tile.X-4,Yellow.Tile.Y-4)
-						'targetTile=New Vec2f(Yellow.Tile.X,Yellow.Tile.Y-4)
+						targetTile=New Vec2i(Yellow.Tile.X-4,Yellow.Tile.Y-4)
+						'targetTile=New Vec2i(Yellow.Tile.X,Yellow.Tile.Y-4)
 					Case Direction.Down
-						targetTile=New Vec2f(Yellow.Tile.X,Yellow.Tile.Y+4)
+						targetTile=New Vec2i(Yellow.Tile.X,Yellow.Tile.Y+4)
 					Case Direction.Left
-						targetTile=New Vec2f(Yellow.Tile.X-4,Yellow.Tile.Y)
+						targetTile=New Vec2i(Yellow.Tile.X-4,Yellow.Tile.Y)
 					Case Direction.Right
-						targetTile=New Vec2f(Yellow.Tile.X+4,Yellow.Tile.Y)
+						targetTile=New Vec2i(Yellow.Tile.X+4,Yellow.Tile.Y)
 				End
 				
 				'Validate inside grid area
@@ -549,7 +549,7 @@ Class PinkyGhostSprite Extends GhostSprite
 				targetTile=ScatterTargetTile
 				
 			Case GhostMode.ReturnPen
-				targetTile=New Vec2f(14,14)
+				targetTile=New Vec2i(14,14)
 		End
 		
 		'Return result
@@ -569,14 +569,14 @@ End
 
 Class InkyGhostSprite Extends GhostSprite
 
-	Method New(image:string,scatterTargetTile:Vec2f)
+	Method New(image:string,scatterTargetTile:Vec2i)
 		Super.New(image,scatterTargetTile)
 		Self.Reset()
 	End
 	
-	Method GetTargetTile:Vec2f() Override
+	Method GetTargetTile:Vec2i() Override
 		'Target pacman by default
-		Local targetTile:Vec2f=Yellow.Tile
+		Local targetTile:Vec2i=Yellow.Tile
 		
 		'Validate
 		Select Self.Mode
@@ -586,17 +586,17 @@ Class InkyGhostSprite Extends GhostSprite
 				Select Yellow.Dir
 					Case Direction.Up
 						'Pacman bug - when up also left
-						targetTile=New Vec2f(Yellow.Tile.X-2,Yellow.Tile.Y-2)
-						'targetTile=New Vec2f(Yellow.Tile.X,Yellow.Tile.Y-2)
+						targetTile=New Vec2i(Yellow.Tile.X-2,Yellow.Tile.Y-2)
+						'targetTile=New Vec2i(Yellow.Tile.X,Yellow.Tile.Y-2)
 					Case Direction.Down
-						targetTile=New Vec2f(Yellow.Tile.X,Yellow.Tile.Y+2)
+						targetTile=New Vec2i(Yellow.Tile.X,Yellow.Tile.Y+2)
 					Case Direction.Left
-						targetTile=New Vec2f(Yellow.Tile.X-2,Yellow.Tile.Y)
+						targetTile=New Vec2i(Yellow.Tile.X-2,Yellow.Tile.Y)
 					Case Direction.Right
-						targetTile=New Vec2f(Yellow.Tile.X+2,Yellow.Tile.Y)
+						targetTile=New Vec2i(Yellow.Tile.X+2,Yellow.Tile.Y)
 				End
 				'-Get distance from Blinkly to target
-				Local offsetFromRed:Vec2f=New Vec2f(Red.Tile.X-targetTile.X,Red.Tile.Y-targetTile.Y) 			
+				Local offsetFromRed:Vec2i=New Vec2i(Red.Tile.X-targetTile.X,Red.Tile.Y-targetTile.Y) 			
 				'-Add distance past target	
 				targetTile.X+=-offsetFromRed.X
 				targetTile.Y+=-offsetFromRed.Y
@@ -611,7 +611,7 @@ Class InkyGhostSprite Extends GhostSprite
 				targetTile=ScatterTargetTile
 				
 			Case GhostMode.ReturnPen
-				targetTile=New Vec2f(14,14)
+				targetTile=New Vec2i(14,14)
 		End
 		
 		'Return result
@@ -632,14 +632,14 @@ End
 
 Class ClydeGhostSprite Extends GhostSprite
 
-	Method New(image:string,scatterTargetTile:Vec2f)
+	Method New(image:string,scatterTargetTile:Vec2i)
 		Super.New(image,scatterTargetTile)
 		Self.Reset()
 	End
 	
-	Method GetTargetTile:Vec2f() Override
+	Method GetTargetTile:Vec2i() Override
 		'Target pacman by default
-		local targetTile:Vec2f=Yellow.Tile
+		local targetTile:Vec2i=Yellow.Tile
 		
 		'Validate
 		Select Self.Mode
@@ -652,7 +652,7 @@ Class ClydeGhostSprite Extends GhostSprite
 				targetTile=ScatterTargetTile
 				
 			Case GhostMode.ReturnPen
-				targetTile=New Vec2f(14,14)
+				targetTile=New Vec2i(14,14)
 		End
 		
 		'Return result
@@ -688,7 +688,7 @@ Class PacmanSprite Extends Sprite
 	Method Update() Override
 		'Prepare
 		Local isCentreTile:Bool = Self.IsCentreTile(Self.X,Self.Y)
-		Local currentTile:Vec2f=Self.Tile
+		Local currentTile:Vec2i=Self.Tile
 		
 		'In tunnel?
 		If (isCentreTile And currentTile.X>=GridWidth-1 And Self.Dir=Direction.Right) Self.SetPosition(0,currentTile.Y,0,4)
