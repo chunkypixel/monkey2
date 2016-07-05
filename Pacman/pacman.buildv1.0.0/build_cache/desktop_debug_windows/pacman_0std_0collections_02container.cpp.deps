@@ -1,0 +1,15 @@
+pacman_std_collections_2container.o: \
+ D:/Dev/Monkey/Pacman/pacman.buildv1.0.0/build_cache/desktop_debug_windows/pacman_std_collections_2container.cpp \
+ D:/Dev/Monkey/Pacman/pacman.buildv1.0.0/build_cache/desktop_debug_windows/pacman_std_collections_2container.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbmonkey.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbstd.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbtypes.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbmemory.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbstring.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbdebug.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbgc.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbarray.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbfunction.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbobject.h \
+ D:/Monkey/monkey2/modules/monkey/native/bbinit.h \
+ D:/Monkey/monkey2/modules/std/std.buildv1.0.0/desktop_debug_windows/std_collections_2container.h
