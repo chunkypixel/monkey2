@@ -27,8 +27,9 @@ Class PacmanWindow Extends Window
 	Field IsPaused:Bool
 	Field IsSuspended:Bool
 	Field ShowFPS:Bool=False
-	Field IsDebug:Bool=False
-	Field MoveGhosts:Bool=False
+	Field IsDebug:Bool=True
+	Field MoveGhosts:Bool=True
+	Field ReleaseGhost:Bool=False
 	
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
@@ -89,11 +90,12 @@ Class PacmanWindow Extends Window
 					Case Key.F2
 						SetGhostMode(GhostMode.Scatter)
 					Case Key.F3
-						SetGhostMode(GhostMode.Frightened)
+						'SetGhostMode(GhostMode.Frightened)
 					Case Key.M
 						MoveGhosts=Not MoveGhosts
 					Case Key.R
-						SetGhostReverseDirection()
+						ReleaseGhost=Not ReleaseGhost
+						'SetGhostReverseDirection()
 				End		
 		End 
 	End

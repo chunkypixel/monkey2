@@ -19,6 +19,8 @@ Global Orange:ClydeGhostSprite
 Global Pink:PinkyGhostSprite
 Global Cyan:InkyGhostSprite
 
+Global DotCounter:Int=0
+
 Enum Direction
 	Up
 	Left
@@ -44,26 +46,24 @@ Function InitialiseSprites()
 	Orange=New ClydeGhostSprite("asset::oranget.png",New Vec2i(0,35))
 	Cyan=New InkyGhostSprite("asset::cyant.png",New Vec2i(27,35))
 	
-	'Testing
-	'Yellow.SetPosition(5,17)
-	'Red.SetPosition(5,17)
-	'Yellow.SetDirection(Direction.Right)
-	'Yellow.SetPosition(23,17)
-	'Red.SetDirection(Direction.Right)
-	'Red.SetPosition(23,17)	
-	
-	'Pink.SetPosition(12,14)
+	'Testing (outside pen)
+	'Pink.SetPosition(14,14)
 	'Pink.Mode=GhostMode.Chase
-	'Pink.SetDirection(Direction.Right)
+	'Pink.SetDirection(Direction.Left)
+	'Pink.NextDir=Direction.Left
 	'Orange.SetPosition(14,14)
 	'Orange.Mode=GhostMode.Chase
-	'Orange.SetDirection(Direction.Right)
-	'Cyan.SetPosition(16,14)
+	'Orange.SetDirection(Direction.Left)
+	'Orange.NextDir=Direction.Left
+	'Cyan.SetPosition(14,14)
 	'Cyan.Mode=GhostMode.Chase
 	'Cyan.SetDirection(Direction.Left)
+	'Cyan.NextDir=Direction.Left
 End
 
 Function UpdateSprites()
+	DotCounter+=1
+	
 	For Local i:=0 Until Sprites.Length
 		If (Sprites[i].Enabled) Sprites[i].Update()
 	Next
@@ -108,6 +108,12 @@ Function SetSpriteSpeed:Void()
 	
 End
 
+Function WrapMod:Int(a:Int,n:Int)
+	Local result:Int = (a Mod n)
+	If (result<0) result+=n
+	Return result
+End
+
 
 Class Sprite
 	Field X:Float=0
@@ -121,8 +127,8 @@ Class Sprite
 	Field Enabled:Bool=True
 	Field Dir:Int=Direction.Up
 	Field NextDir:Int=Direction.Up
-	Field PrevDir:Int=Direction.Up
 	Field Speed:Float=1.0
+	Field PrevTile:=New Vec2i(0,0)
 	
 	Method New(image:string)
 		' Prepare
@@ -133,14 +139,29 @@ Class Sprite
 	End
 	
 	Property Tile:Vec2i()
-		Return New Vec2i(Int((Self.X)/8),Int((Self.Y)/8))
+		Return New Vec2i(Int(Self.X/8),Int(Self.Y/8))
 	End
-	
+		
 	Method Reset() Abstract
 	
 	Method SetSpeed() Abstract
 	
-	Method Update() Abstract
+	Method Update() Virtual
+		'Validate speed
+		Self.SetSpeed()
+
+		'Update position
+		Select Self.Dir
+			Case Direction.Up
+				Self.Y-=Speed
+			Case Direction.Left
+				Self.X-=Speed
+			Case Direction.Down
+				Self.Y+=Speed
+			Case Direction.Right
+				Self.X+=Speed
+		End
+	End
 
 	Method Render(canvas:Canvas) Virtual
 		'Debugger
@@ -165,87 +186,61 @@ Class Sprite
 		' Draw
 		canvas.BlendMode=Self.Blend
 		canvas.Color=Self.Color
-		canvas.DrawImage(Self.Images.Item[frame],position,Self.Rotation,scale)	
+		canvas.DrawImage(Self.Images.Item[frame],position,Self.Rotation,scale)
 	End
 		
-	'Method Update() Virtual
-	'	'Auto movement pattern
-	'	
-	'	'Prepare
-	'	Local moveX:Float=Self.X
-	'	Local moveY:Float=Self.Y
-	'	
-	'	'Precalc next step
-	'	Select Self.Dir
-	'		Case Direction.Up
-	'			moveY-=Speed
-	'		Case Direction.Left
-	'			moveX-=Speed
-	'		Case Direction.Down
-	'			moveY+=Speed
-	'		Case Direction.Right
-	'			moveX+=Speed
-	'	End
-	'	
-	'	'Validate for changing position (centre of tile)
-	'	If (Self.IsCentreTile(moveX,moveY))
-	'		'Set new direction and tile
-	'		Local nextTile:=New Vec2f(Int((moveX)/8),Int((moveY)/8))
-	'		Self.SetDirection(GetNewDirection(nextTile,Self.Dir))
-	'		
-	'		'Update tile
-	'		Self.Tile=nextTile
-	'	End
-	'	
-	'	'Update position
-	'	Self.X=moveX
-	'	Self.Y=moveY			
-    '
-	'End
-
 	Method SetPosition(x:Int,y:Int,offsetX:Int=4,offsetY:Int=4)
 		SetPosition(New Vec2f(x,y),offsetX,offsetY)
 	End	
 	Method SetPosition(tile:Vec2f,offsetX:Int=4,offsetY:Int=4)
-		'Self.Tile=tile
 		Self.X=(tile.X*8)+offsetX
 		Self.Y=(tile.Y*8)+offsetY
 	End
 
 	Method SetDirection(dir:Int)
-		Self.PrevDir=Self.Dir
 		Self.Dir=dir
 	End
-					
-	Method IsCentreTile:Bool(x:Float,y:Float,xOffset:Int=4)
-		Return ((Int(x) Mod 8)=xOffset And (Int(y) Mod 8)=4)
+				
+	Method IsCentreTile:Bool(x:Float,y:Float,xOffset:Int=4,yOffset:Int=4) Virtual
+		'Return
+		Return ((Int(x) Mod 8)=xOffset And (Int(y) Mod 8)=yOffset)
 	End
 	
 	Method GetNewDirection:Int(tile:Vec2i)
 		'Validate
-		If (Grid[0,tile.X,tile.Y-1]=0 And Self.Dir<>Direction.Down And Self.PrevDir<>Direction.Down)
+		If (Grid[0,tile.X,tile.Y-1]=0 And Self.Dir<>Direction.Down)
 			Return Direction.Up
-		Elseif(Grid[0,tile.X-1,tile.Y]=0 And Self.Dir<>Direction.Right And Self.PrevDir<>Direction.Right)
+		Elseif(Grid[0,tile.X-1,tile.Y]=0 And Self.Dir<>Direction.Right)
 			Return Direction.Left
-		Elseif(Grid[0,tile.X,tile.Y+1]=0 And Self.Dir<>Direction.Up And Self.PrevDir<>Direction.Up)
+		Elseif(Grid[0,tile.X,tile.Y+1]=0 And Self.Dir<>Direction.Up)
 			Return Direction.Down
 		End
 		Return Direction.Right
 	End
 		
 	Method CanMoveDirection:Bool(tile:Vec2i,moveDir:Int)
-		'Validate
-		Select moveDir
+		tile=GetTile(tile,moveDir)
+		Return (Grid[0,tile.X,tile.Y]=0) 					
+	End
+	
+	Method GetTile:Vec2i(tile:Vec2i,dir:Int)
+		'Adjust search block (wrap as required)
+		'Note: Built-in Mod doesn't handle negative wrap
+		Select dir
 			Case Direction.Up
-				If (tile.Y-1>=0) Return (Grid[0,tile.X,tile.Y-1]=0) 
+				tile.Y=WrapMod(tile.Y-1,GridHeight)
+				'tile.Y=(tile.Y-1) Mod GridHeight
 			Case Direction.Down
-				if (tile.Y+1<GridHeight) Return (Grid[0,tile.X,tile.Y+1]=0) 
+				tile.Y=WrapMod(tile.Y+1,GridHeight)
+				'tile.Y=(tile.Y+1) Mod GridHeight
 			Case Direction.Left
-				If (tile.X-1>=0) Return (Grid[0,tile.X-1,tile.Y]=0) 			
+				tile.X=WrapMod(tile.X-1,GridWidth)
+				'tile.X=(tile.X-1) Mod GridWidth
 			Case Direction.Right
-				if (tile.X+1<GridWidth) Return (Grid[0,tile.X+1,tile.Y]=0) 					
+				tile.X=WrapMod(tile.X+1,GridWidth)
+				'tile.X=(tile.X+1) Mod GridWidth
 		End
-		Return False
+		Return tile	
 	End
 	
 End
@@ -267,14 +262,29 @@ Class GhostSprite Extends Sprite
 	'Provide Ghost Specific Targetting
 	Method GetTargetTile:Vec2i() Abstract
 	
+	Method IsCentreTile:Bool(x:Float,y:Float,xOffset:Int=4,yOffset:Int=4) Override
+		'Validate (make sure we have left last tile before next check)
+		'Select Self.Mode
+		'	case GhostMode.Chase,GhostMode.Scatter
+				Local currentTile:=New Vec2i(Int(x/8),Int(y/8))
+				If (currentTile.X=Self.PrevTile.X And currentTile.Y=Self.PrevTile.Y) Return False
+		'End
+		
+		'Result
+		Return Super.IsCentreTile(x,y,xOffset,yOffset)
+	End
+	
 	Method Update() Override
 		'Debugging
 		If (Not window.MoveGhosts) return
+		
+		'Increment
+		Self.DotCounter+=1
 
 		'Get current position
 		Local moveX:Float=Self.X
 		Local moveY:Float=Self.Y
-		
+						
 		'Determine required IsCentreTile xTileOffset
 		'Allows use to utilise the existing tile system inside the Pen
 		Local xTileOffset:Int=4
@@ -283,132 +293,161 @@ Class GhostSprite Extends Sprite
 				xTileOffset=0
 		End
 		
-		'Precalc next step
-		Self.SetSpeed()
-		Select Self.Dir
-			Case Direction.Up
-				moveY-=Speed
-			Case Direction.Left
-				moveX-=Speed
-			Case Direction.Down
-				moveY+=Speed
-			Case Direction.Right
-				moveX+=Speed
-		End
 		
-		'Prepare
-		Local isCentreTile:bool=Self.IsCentreTile(moveX,moveY,xTileOffset)
-
-		'Reverse direction?
-		'Note: Ghosts can only reverse direction once centered on a tile
-		If (Self.ReverseDirection And isCentreTile)	
-			'Prepare
-			Local reverseDir:Int=(Self.Dir+2) Mod 4
-			
-			'Validate (if in a corner a straight reverse may not work)
-			If (Not Self.CanMoveDirection(Self.Tile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
-			
-			'Update
-			Self.SetDirection(reverseDir)
-			Self.ReverseDirection=False
-		End 
-
-		'Is in tunnel?
-		'TODO: need to allow object to exit 'offscreen' before flipping
-		If (isCentreTile And Self.Tile.X>=GridWidth-1 And Self.Dir=Direction.Right)
-			'Move to left
-			Self.SetPosition(0,Self.Tile.Y,0,4)
-			moveX=Self.X
-			moveY=Self.Y
-		Elseif (isCentreTile And Self.Tile.X<=0 And Self.Dir=Direction.Left)
-			'Move to right 
-			Self.SetPosition(GridWidth-1,Self.Tile.Y,7,4)
-			moveX=Self.X
-			moveY=Self.Y
-		End	
-
-		'Prepare	
-		Local nextTile:=New Vec2i(Int((moveX)/8),Int((moveY)/8))
-		
-		'Movement
+		'Update pen position (change direction as soon as we enter required tile)
+		Local penCentreTile:Bool=False
 		Select Self.Mode
 			Case GhostMode.Pen
-				'Validate if continue to move in direction otherwise switch to opposite
-			    If (Not CanMoveDirection(nextTile,Self.Dir)) Self.Dir=(Self.Dir+2) Mod 4	
-					
-				'Ready to leave pen?
-				If (isCentreTile And Self.DotCounter>=Self.ReleaseOnDot)
-					'Prepare to validate leaving position
-					Self.Dir=Direction.Up
-					If (Self.Tile.X<14) Self.Dir=Direction.Right
-					If (Self.Tile.X>14) Self.Dir=Direction.Left
-					Self.Mode=GhostMode.LeavePen
-					
-				End If
-				
-			Case GhostMode.LeavePen
-				'Ready to actually start leaving (must be centred on exit first)
-				If (isCentreTile And Self.Tile.X=14)
-					If (Self.Tile.Y>14)
-						'Still leaving pen
-						Self.Dir=Direction.Up
-					Else
-						'Left pen
-						'If ghost mode changes when inside pen then we can move right on next centering
-						Self.Dir=Direction.Left
-						Self.NextDir=Self.ExitPenDir
-						Self.Mode=GhostMode.Chase
-					End
-
+				'Validate if continue to move in direction otherwise reverse direction
+				Select Self.Dir
+					Case Direction.Up
+						If (Self.Tile.Y<=16) Self.Dir=(Self.Dir+2) Mod 4	
+			
+					Case Direction.Down
+						If (Self.Tile.Y>=18) Self.Dir=(Self.Dir+2) Mod 4	
 				End
 				
-			Default	
-				'Validate for changing position (centre of tile)
-				If (Self.IsCentreTile(moveX,moveY,xTileOffset))			
+				'NOTE: Changing current direction below interferes which releasing these
+				
+		End
+
+		'Check for centre of tile
+		Local isCentreTile:bool=Self.IsCentreTile(moveX,moveY,xTileOffset)
+		If (isCentreTile)	
+			'Update current direction
+			If (Not Self.ReverseDirection)
+				'Set next direction
+				Self.SetDirection(Self.NextDir)	
+				
+			Else
+				'Reverse direction?
+				'Note: Ghosts can only reverse direction once centered on a tile
+				
+				'Prepare
+				Local reverseDir:Int=(Self.Dir+2) Mod 4
+			
+				'Validate (if in a corner a straight reverse may not work)
+				'If (Not Self.CanMoveDirection(Self.PrevTile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
+			
+				'Update
+				Self.SetDirection(reverseDir)
+				Self.ReverseDirection=False
+				
+			End
+
+			'Store
+			Self.PrevTile=Self.Tile
+						
+			'Is in tunnel?
+			'TODO: need to allow object to exit 'offscreen' before flipping
+			If (Self.Tile.X>=GridWidth-1 And Self.Dir=Direction.Right)
+				'Move to left
+				Self.SetPosition(0,Self.Tile.Y,0,4)
+				moveX=Self.X
+				moveY=Self.Y
+				
+			Elseif (Self.Tile.X<=0 And Self.Dir=Direction.Left)
+				'Move to right 
+				Self.SetPosition(GridWidth-1,Self.Tile.Y,7,4)
+				moveX=Self.X
+				moveY=Self.Y
+				
+			End	
+
+			'Set next direction
+			Select Self.Mode
+				Case GhostMode.Pen	
+					'Ready to leave pen?					
+					If (Self.DotCounter>=Self.ReleaseOnDot)
+						'Prepare to validate leaving position
+						Self.Mode=GhostMode.LeavePen
+						'Set direction
+						Self.Dir=Direction.Up
+						If (Self.Tile.X<14) Self.Dir=Direction.Right
+						If (Self.Tile.X>14) Self.Dir=Direction.Left
+						Self.NextDir=Direction.Up
+												
+						'Set (one at a time)
+						DotCounter=0
+						
+					End If
+				
+				Case GhostMode.LeavePen
+					'Ready to actually start leaving (must be centred on exit first)
+					If (Self.Tile.X=14)
+						If (Self.Tile.Y>14)
+							'Still leaving pen
+							Self.Dir=Direction.Up
+							Self.NextDir=Self.Dir
+						
+						Else
+							'Left pen
+							'If ghost mode changes when inside pen then we can move right on next centering
+							Self.Dir=Direction.Left
+							Self.NextDir=Self.ExitPenDir
+							Self.Mode=GhostMode.Chase
+						
+						End
+
+					End
+				
+				Default	
 					'Set new direction and tile
 					Select Self.Mode
 						Case GhostMode.Chase,GhostMode.Scatter,GhostMode.ReturnPen
-							'Determine target
-							Local targetTile:Vec2i=GetTargetTile()
-
-							'Get opposite of current dir
-							'We need to exclude direction we are coming from
-							Local oppositeDir:Int=(Self.Dir+2) Mod 4
-							Local oppositePrevDir:Int=(Self.PrevDir+2) Mod 4
-							
-							'Determine best available direction (order Up, Left, Down, Right)
+							'Prepare
+							Local nextTile:=Self.GetTile(Self.Tile,Self.NextDir)
+							Local targetTile:Vec2i=Self.GetTargetTile()
+							Local excludeDir:Int=(Self.Dir+2) Mod 4
 							Local targetDir:Int=-1
 							Local targetDistance:Int=-1
+
+							'Validate (special zones where ghost cannot move up)
+							Local canMoveUp:Bool=True
+							Select Self.Mode
+								Case GhostMode.Chase,GhostMode.Scatter
+									If (Grid[1,nextTile.X,nextTile.Y]=2) canMoveUp=False
+							End
+							
+							'Validate (determine best available direction [order Up, Left, Down, Right])
 							For Local dir:Int=0 To 3
-								'Validate (exclude opposite direction to current)
-								Local checkTargetDistance:Int=Self.FindTargetDistance(nextTile,targetTile,dir)
-								If (checkTargetDistance>=0 And (checkTargetDistance<targetDistance Or targetDistance<0) And dir<>oppositeDir And dir<>oppositePrevDir)
-									targetDistance=checkTargetDistance
-									targetDir=dir
+								'Validate (special zone or direction coming from)
+								If ((dir=Direction.Up And Not canMoveUp) Or dir=excludeDir) Continue
+								
+								'Validate
+								If (Self.CanMoveDirection(nextTile,dir))
+									Local checkTargetDistance:Int=Self.FindTargetDistance(nextTile,targetTile,dir)
+									If (checkTargetDistance>=0 And (checkTargetDistance<targetDistance Or targetDistance<0))
+										'Store best available
+										targetDistance=checkTargetDistance
+										targetDir=dir
+									End
 								End
 							Next
 							
 							'Set
-							Self.SetDirection(targetDir)
+							Self.NextDir=targetDir
 
 						Case GhostMode.Frightened
+							'NOT WORKING CURRENTLY
+							
 							'Note: There is a pseudo-random (PRNG) number to determine direction
 							'      if it cannot move in that direction then choose a direction
 							'      as follows: up,left,down,right
 							'Note: Need to make sure we don't return from existing direction 
 
 							'TODO: Implement above
-							Self.SetDirection(Self.GetNewDirection(nextTile))
+							Self.NextDir=Self.GetNewDirection(Self.Tile)
+							'Self.SetDirection(Self.GetNewDirection(currentTile))
 
 					End
-
-				End
 			
-		End
+			End	
 				
+		End
+
 		'Update position
-		Self.X=moveX
-		Self.Y=moveY			
+		Super.Update()
 
 	End
 		
@@ -425,6 +464,7 @@ Class GhostSprite Extends Sprite
 					canvas.Color=Color.Green
 					canvas.DrawLine(DisplayOffset.X+(Self.Tile.X*8)+4,DisplayOffset.Y+(Self.Tile.Y*8)+4,DisplayOffset.X+(targetTile.X*8)+4,DisplayOffset.Y+(targetTile.Y*8)+4)
 			End
+			
 		End
 		
 	End
@@ -445,40 +485,14 @@ Class GhostSprite Extends Sprite
 	End
 		
 Private
-	Method FindTargetDistance:Int(tile:Vec2i,targetTile:Vec2i,dirToTarget:Int)		
-		'Validate (special zones where ghost cannot move up)
-		Local canMoveUp:Bool=True
-		Select Self.Mode
-			Case GhostMode.Chase,GhostMode.Scatter
-				If (Grid[1,tile.X,tile.Y]=2) canMoveUp=False
-		End
-		
-		'Process
-		Select dirToTarget
-			Case Direction.Up
-				If (tile.Y>0 And Grid[0,tile.X,tile.Y-1]=0 And canMoveUp)
-					Return GetDistanceToTarget(tile.X,tile.Y-2,targetTile.X,targetTile.Y)
-				End
-			Case Direction.Down
-				If (tile.Y<GridHeight-1 And Grid[0,tile.X,tile.Y+1]=0) 
-					Return GetDistanceToTarget(tile.X,tile.Y+2,targetTile.X,targetTile.Y)			
-				End
-			Case Direction.Left
-				If (tile.X>0 And Grid[0,tile.X-1,tile.Y]=0)
-					Return GetDistanceToTarget(tile.X-2,tile.Y,targetTile.X,targetTile.Y)	
-				End	
-			Case Direction.Right
-				If (tile.X<GridWidth-1 And Grid[0,tile.X+1,tile.Y]=0) 
-					Return GetDistanceToTarget(tile.X+2,tile.Y,targetTile.X,targetTile.Y)	
-				End							
-		End
-		Return -1	
+	Method FindTargetDistance:Int(tile:Vec2i,targetTile:Vec2i,dirToTarget:Int)	
+		tile=Self.GetTile(tile,dirToTarget)
+		Return GetDistanceToTarget(tile,targetTile)
 	End
-	
-	Method GetDistanceToTarget:Int(x1:Int,y1:Int,x2:Int,y2:Int)
-		'First will return total tiles (larger), second will return distance
-		'Return ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
-    	Return (Sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)))
+		
+	Method GetDistanceToTarget:Int(tile:Vec2i,targetTile:Vec2i)
+		Local d:=New Vec2i(tile.X-targetTile.X,tile.Y-targetTile.Y)
+		Return (d.X*d.X+d.Y*d.y)
 	End
 	
 End
@@ -505,6 +519,7 @@ Class BlinkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.SetPosition(14,14,0,4)
 		Self.SetDirection(Direction.Left)
+		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Chase
 		Self.SetSpeed()
 		Self.DotCounter=0
@@ -561,6 +576,7 @@ Class PinkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.SetPosition(14,17,0,4)
 		Self.SetDirection(Direction.Down)
+		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
 		Self.SetSpeed()
 		Self.DotCounter=0
@@ -623,10 +639,11 @@ Class InkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.SetPosition(12,17,0,4)
 		Self.SetDirection(Direction.Up)
+		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
 		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=0'30
+		Self.ReleaseOnDot=300
 	End
 	
 End
@@ -647,7 +664,7 @@ Class ClydeGhostSprite Extends GhostSprite
 		Select Self.Mode
 			Case GhostMode.Chase
 				'If within 8 tiles of pacman target him otherwise use scatter position
-				Local distanceToYellow:Int=GetDistanceToTarget(Self.Tile.X,Self.Tile.Y,Yellow.Tile.X,Yellow.Tile.Y)
+				Local distanceToYellow:Int=Sqrt(Self.GetDistanceToTarget(Self.Tile,Yellow.Tile))
 				If (distanceToYellow>8) targetTile=ScatterTargetTile
 				 				
 			case GhostMode.Scatter
@@ -664,10 +681,11 @@ Class ClydeGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.SetPosition(16,17,0,4)
 		Self.SetDirection(Direction.Up)
+		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
 		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=0'60
+		Self.ReleaseOnDot=600
 	End
 	
 End
@@ -683,6 +701,7 @@ Class PacmanSprite Extends Sprite
 	Method Reset() Override
 		Self.SetPosition(14,26,0,4)
 		Self.SetDirection(Direction.Left)
+		Self.NextDir=Self.Dir
 		Self.SetSpeed()
 		Self.Score=0
 	End
@@ -762,21 +781,8 @@ Class PacmanSprite Extends Sprite
 		'Continue? (player)
 		If (isKeysPressed And isCentreTile And Not Self.CanMoveDirection(currentTile,Self.Dir)) Return
 		
-		'Calc next step
-		Select Self.Dir
-			Case Direction.Up
-				moveY-=Speed
-			Case Direction.Left
-				moveX-=Speed
-			Case Direction.Down
-				moveY+=Speed
-			Case Direction.Right
-				moveX+=Speed
-		End
-		
 		'Update position
-		Self.X=moveX
-		Self.Y=moveY	
+		Super.Update()
 	End
 
 	Method SetSpeed() Override
