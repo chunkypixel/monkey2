@@ -18,7 +18,7 @@ Global DisplayOffset:=New Vec2i(0,0)
 
 Function Main()
 	New AppInstance()
-	window = New PacmanWindow("Pacman", 640, 480, WindowFlags.Resizable)	'Fullscreen/Resizable
+	window = New PacmanWindow("Pacman",1024,768, WindowFlags.Resizable)	'Fullscreen/Resizable
 	App.Run()
 End
 
@@ -26,10 +26,9 @@ Class PacmanWindow Extends Window
 
 	Field IsPaused:Bool
 	Field IsSuspended:Bool
-	Field ShowFPS:Bool=False
-	Field IsDebug:Bool=True
+	Field ShowFPS:Bool=True
+	Field IsDebug:Bool=False
 	Field MoveGhosts:Bool=True
-	Field ReleaseGhost:Bool=False
 	
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
@@ -94,7 +93,6 @@ Class PacmanWindow Extends Window
 					Case Key.M
 						MoveGhosts=Not MoveGhosts
 					Case Key.R
-						ReleaseGhost=Not ReleaseGhost
 						'SetGhostReverseDirection()
 				End		
 		End 

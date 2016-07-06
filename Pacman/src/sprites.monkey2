@@ -43,8 +43,8 @@ Function InitialiseSprites()
 	Yellow=New PacmanSprite("asset::yellow.png")
 	Red=New BlinkyGhostSprite("asset::redt.png",New Vec2i(25,0))
 	Pink=New PinkyGhostSprite("asset::pinkt.png",New Vec2i(2,0))
-	Orange=New ClydeGhostSprite("asset::oranget.png",New Vec2i(0,35))
 	Cyan=New InkyGhostSprite("asset::cyant.png",New Vec2i(27,35))
+	Orange=New ClydeGhostSprite("asset::oranget.png",New Vec2i(0,35))
 	
 	'Testing (outside pen)
 	'Pink.SetPosition(14,14)
@@ -288,55 +288,38 @@ Class GhostSprite Extends Sprite
 		'Determine required IsCentreTile xTileOffset
 		'Allows use to utilise the existing tile system inside the Pen
 		Local xTileOffset:Int=4
+		Local yTileOffset:Int=4
 		Select Self.Mode
-			Case GhostMode.Pen,GhostMode.LeavePen
+			Case GhostMode.Pen,GhostMode.LeavePen,GhostMode.EnterPen
 				xTileOffset=0
+			Case GhostMode.ReturnPen
+				'Wait until we reach return cell
+				If (Self.Tile.X=14 And Self.Tile.Y=14) xTileOffset=0
 		End
 		
-		
-		'Update pen position (change direction as soon as we enter required tile)
-		Local penCentreTile:Bool=False
+		'Update pen position (changes direction as soon as we enter required tile)
 		Select Self.Mode
 			Case GhostMode.Pen
-				'Validate if continue to move in direction otherwise reverse direction
-				Select Self.Dir
-					Case Direction.Up
-						If (Self.Tile.Y<=16) Self.Dir=(Self.Dir+2) Mod 4	
-			
-					Case Direction.Down
-						If (Self.Tile.Y>=18) Self.Dir=(Self.Dir+2) Mod 4	
-				End
-				
-				'NOTE: Changing current direction below interferes which releasing these
-				
+				'Reverse dir?
+				If (Self.Tile.Y<>17) Self.Dir=(Self.Dir+2) Mod 4						
 		End
 
 		'Check for centre of tile
-		Local isCentreTile:bool=Self.IsCentreTile(moveX,moveY,xTileOffset)
+		Local isCentreTile:bool=Self.IsCentreTile(moveX,moveY,xTileOffset,yTileOffset)
 		If (isCentreTile)	
-			'Update current direction
-			If (Not Self.ReverseDirection)
-				'Set next direction
-				Self.SetDirection(Self.NextDir)	
-				
-			Else
-				'Reverse direction?
-				'Note: Ghosts can only reverse direction once centered on a tile
-				
-				'Prepare
-				Local reverseDir:Int=(Self.Dir+2) Mod 4
-			
-				'Validate (if in a corner a straight reverse may not work)
-				'If (Not Self.CanMoveDirection(Self.PrevTile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
-			
-				'Update
-				Self.SetDirection(reverseDir)
-				Self.ReverseDirection=False
-				
+			'Update direction?
+			Select Self.Mode
+				Case GhostMode.Pen,GhostMode.LeavePen,GhostMode.EnterPen	
+					'Do nothing					
+					'Notes: For these modes we are using Dir not NextDir
+									
+				Default
+					'Set direction
+					Self.SetDirection(Self.NextDir)	
+					
+					'Store (used to help determine if moved to next tile)
+					Self.PrevTile=Self.Tile			
 			End
-
-			'Store
-			Self.PrevTile=Self.Tile
 						
 			'Is in tunnel?
 			'TODO: need to allow object to exit 'offscreen' before flipping
@@ -356,40 +339,44 @@ Class GhostSprite Extends Sprite
 
 			'Set next direction
 			Select Self.Mode
-				Case GhostMode.Pen	
-					'Ready to leave pen?					
-					If (Self.DotCounter>=Self.ReleaseOnDot)
-						'Prepare to validate leaving position
+				Case GhostMode.Pen					
+					'Ready to leave?					
+					If (Self.DotCounter>=Self.ReleaseOnDot And Self.Dir=Direction.Up)
+						'Set
 						Self.Mode=GhostMode.LeavePen
-						'Set direction
+						
+						'Set direction (depending on current ghost position)
 						Self.Dir=Direction.Up
 						If (Self.Tile.X<14) Self.Dir=Direction.Right
 						If (Self.Tile.X>14) Self.Dir=Direction.Left
-						Self.NextDir=Direction.Up
-												
-						'Set (one at a time)
-						DotCounter=0
 						
 					End If
 				
 				Case GhostMode.LeavePen
-					'Ready to actually start leaving (must be centred on exit first)
+					'Validate (must be centered on exit first before moving up)
 					If (Self.Tile.X=14)
 						If (Self.Tile.Y>14)
-							'Still leaving pen
+							'Leaving pen
 							Self.Dir=Direction.Up
-							Self.NextDir=Self.Dir
 						
 						Else
 							'Left pen
-							'If ghost mode changes when inside pen then we can move right on next centering
+							'Note: If ghost mode changes when inside pen then we can move right on next centering
 							Self.Dir=Direction.Left
 							Self.NextDir=Self.ExitPenDir
 							Self.Mode=GhostMode.Chase
 						
 						End
-
+											
 					End
+				
+				Case GhostMode.ReturnPen
+					'Validate
+					If (Self.Tile.X=14 And Self.Tile.Y=14)
+					
+					End
+					
+				Case GhostMode.EnterPen
 				
 				Default	
 					'Set new direction and tile
@@ -643,7 +630,7 @@ Class InkyGhostSprite Extends GhostSprite
 		Self.Mode=GhostMode.Pen
 		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=300
+		Self.ReleaseOnDot=150
 	End
 	
 End
@@ -685,7 +672,7 @@ Class ClydeGhostSprite Extends GhostSprite
 		Self.Mode=GhostMode.Pen
 		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=600
+		Self.ReleaseOnDot=300
 	End
 	
 End
