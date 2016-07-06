@@ -63,7 +63,7 @@ Class PacmanWindow Extends Window
 		'Score
 		canvas.Color=Color.White
 		DrawFont(canvas,"1UP",24,0,Color.White)
-		Local p1Score:String="      "+Yellow.Score
+		Local p1Score:String="      "+Pacman.Score
 		DrawFont(canvas,p1Score.Right(6),8,8,Color.White)
 		DrawFont(canvas,"HIGH SCORE",72,0,Color.White)
 		
