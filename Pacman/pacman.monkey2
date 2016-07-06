@@ -93,7 +93,7 @@ Class PacmanWindow Extends Window
 					Case Key.M
 						MoveGhosts=Not MoveGhosts
 					Case Key.R
-						'SetGhostReverseDirection()
+						SetGhostMode(GhostMode.ReturnPen)
 				End		
 		End 
 	End
