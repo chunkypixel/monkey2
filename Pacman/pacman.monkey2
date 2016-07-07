@@ -33,21 +33,20 @@ Class PacmanWindow Extends Window
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
 		Super.New(title, width, height, flags)
-		ClearColor = Color.Black
-		Mouse.PointerVisible=False
-		
+
 		'Virtual Resolution
 		Layout = "letterbox"
 		MinSize=New Vec2i(224,288)
 		MaxSize=New Vec2i(width,height)
-		
+		ClearColor = Color.Black
+		Mouse.PointerVisible=False	
 		' Setup
 		InitialiseSprites()
 		InitialiseGrid()
 		InitialiseFont()
 		
 		'Random Seed
-		SeedRnd(12345678)
+		'SeedRnd(12345678)
 		
 	End Method
 	
@@ -89,7 +88,7 @@ Class PacmanWindow Extends Window
 					Case Key.F2
 						SetGhostMode(GhostMode.Scatter)
 					Case Key.F3
-						'SetGhostMode(GhostMode.Frightened)
+						SetGhostMode(GhostMode.Frightened)
 					Case Key.M
 						MoveGhosts=Not MoveGhosts
 					Case Key.R
