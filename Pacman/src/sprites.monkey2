@@ -11,6 +11,7 @@ Namespace pacman
 #Import "../images/pinky.png"
 #Import "../images/clyde.png"
 #Import "../images/inky.png"
+#Import "../images/eyes.png"
 
 Global Sprites:=New Stack<Sprite> ' Contains all the sprites displayed on the screen
 Global Pacman:PacmanSprite
@@ -18,6 +19,7 @@ Global Blinky:BlinkyGhostSprite
 Global Pinky:PinkyGhostSprite
 Global Clyde:ClydeGhostSprite
 Global Inky:InkyGhostSprite
+Global Eyes:ImageCollection
 
 Global DotCounter:Int=0
 
@@ -30,16 +32,20 @@ End
 
 Enum GhostMode
     Pen
-    PrepareLeavePen
+    LeaveCentrePen
     LeavePen
 	ReturnPen
-	EnterPen
+	ReturnCentrePen
+	ReturnHomePen
 	Chase
 	Scatter
 	Frightened
 End
 
 Function InitialiseSprites()
+	'Images
+	Eyes=New ImageCollection("asset::eyes.png",16,16)
+
 	'Sprites
 	Pacman=New PacmanSprite("asset::yellow.png")
 	Blinky=New BlinkyGhostSprite("asset::blinky.png")
@@ -85,7 +91,12 @@ End
 Function SetGhostMode:Void(mode:Int)
 	For Local i:=0 Until Sprites.Length
 		Local ghost:GhostSprite=Cast<GhostSprite>(Sprites[i])
-		If (ghost<>Null And ghost.Mode>GhostMode.ReturnPen) ghost.Mode=mode
+		If (ghost<>Null) 
+			Select ghost.Mode
+				Case GhostMode.Chase,GhostMode.Scatter,GhostMode.Frightened
+					ghost.Mode=mode
+			End
+		End
 	Next
 End
 
@@ -127,12 +138,13 @@ Class Sprite
 	Field Enabled:Bool=True
 	Field Dir:Int=Direction.Up
 	Field Speed:Float=1.0
+	Field StartTile:=New Vec2i(0,0)
 	Field HomeTile:=New Vec2i(0,0)
 	
 	Method New(asset:string)
 		' Prepare
 		Self.Images=New ImageCollection(asset,16,16)		
-				
+			
 		' Store
 		Sprites.Push(Self)
 	End
@@ -162,6 +174,10 @@ Class Sprite
 		End
 	End
 
+	Method GetAnimation:ImageCollection() Virtual
+		Return Self.Images
+	End	
+	
 	Method Render(canvas:Canvas) Virtual
 		'Debugger
 		If (window.IsDebug)
@@ -177,7 +193,7 @@ Class Sprite
 	Method Render(canvas:Canvas,frame:Int,position:Vec2f,flip:Bool=False)
 		' Prepare
 		Local scale:=Self.Scale
-
+		Local images:ImageCollection=Self.GetAnimation()
 		' Validate
 		If (frame=-1) frame=Self.Frame
 		If (flip) scale=New Vec2f(-1,1)
@@ -185,7 +201,7 @@ Class Sprite
 		' Draw
 		canvas.BlendMode=Self.Blend
 		canvas.Color=Self.Color
-		canvas.DrawImage(Self.Images.Item[frame],position,Self.Rotation,scale)
+		canvas.DrawImage(images.Item[frame],position,Self.Rotation,scale)
 	End
 		
 	Method SetPosition(x:Int,y:Int,offsetX:Int=4,offsetY:Int=4)
@@ -214,7 +230,7 @@ Class Sprite
 		
 	Method CanMoveDirection:Bool(tile:Vec2i,moveDir:Int)
 		tile=GetTile(tile,moveDir)
-		If (moveDir=Direction.Up And Grid[0,tile.X,tile.Y]=44) Return True
+		'If (moveDir=Direction.Up And Grid[0,tile.X,tile.Y]=44) Return True
 		Return (Grid[0,tile.X,tile.Y]=0) 					
 	End
 	
@@ -261,8 +277,12 @@ Class GhostSprite Extends Sprite
 		select Self.Mode
 			Case GhostMode.LeavePen,GhostMode.ReturnPen
 				targetTile=New Vec2i(14,14)		
-			Case GhostMode.PrepareLeavePen
-				targetTile=New Vec2i(14,17)			
+			Case GhostMode.LeaveCentrePen
+				targetTile=New Vec2i(14,17)
+			Case GhostMode.ReturnCentrePen
+				targetTile=New Vec2i(14,18)
+			Case GhostMode.ReturnHomePen
+				targetTile=Self.HomeTile			
 		End
 		Return targetTile
 	End
@@ -270,7 +290,9 @@ Class GhostSprite Extends Sprite
 	Method SetSpeed() Override
 		'Validate
 		Select Self.Mode
-			Case GhostMode.Pen,GhostMode.PrepareLeavePen,GhostMode.LeavePen
+			Case GhostMode.Pen
+				Self.Speed=0.75
+			Case GhostMode.LeaveCentrePen,GhostMode.LeavePen,GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
 				Self.Speed=0.75
 			Case GhostMode.Frightened
 				Self.Speed=0.50
@@ -282,7 +304,21 @@ Class GhostSprite Extends Sprite
 		End
 		
 		'In tunnel?
-		If (Grid[1,Self.Tile.X,Self.Tile.Y]=1) Self.Speed=0.40
+		If (Self.Tile.X<=0 Or Self.Tile.X>=GridWidth)
+			Self.Speed=0.40
+		Elseif (Grid[1,Self.Tile.X,Self.Tile.Y]=1) 
+			Self.Speed=0.40
+		End
+	End
+	
+	Method GetAnimation:ImageCollection() Override
+		Select Self.Mode
+			Case GhostMode.Frightened
+			
+			Case GhostMode.ReturnPen,GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
+				Return Eyes
+		End
+		Return Super.GetAnimation()
 	End
 	
 	Method IsCentreTile:Bool(x:Float,y:Float,xOffset:Int=4,yOffset:Int=4) Override
@@ -301,136 +337,161 @@ Class GhostSprite Extends Sprite
 		'Debugging
 		If (Not window.MoveGhosts) return
 		
-		'Increment
+		'Temp:Increment
 		Self.DotCounter+=1
+		
+		'Repeat (speed up return to pen)
+		Local updateIndex:Int=1
+		If(Self.Mode=GhostMode.ReturnPen) updateIndex=2
+		
+		'Process
+		For Local index:Int=0 Until updateIndex
+			'Determine required IsCentreTile xTileOffset
+			'Allows us to utilise the existing tile system inside the pen
+			Local xTileOffset:Int=4
+			Local yTileOffset:Int=4
+			Select Self.Mode
+				Case GhostMode.Pen
+					xTileOffset=0
+				'	If (Self.Dir=Direction.Up) yTileOffset=7
+				'	If (Self.Dir=Direction.Down) yTileOffset=0
+					
+				Case GhostMode.LeaveCentrePen,GhostMode.LeavePen
+					xTileOffset=0
+					
+				Case GhostMode.ReturnPen
+					'Wait until we reach entry position
+					Local returnTile:=Self.GetTargetTile()
+					If (Self.Tile.X=returnTile.X And Self.Tile.Y=returnTile.Y) xTileOffset=0
+					
+				Case GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
+					'Get to bottom of pen
+					xTileOffset=0
+					yTileOffset=0
+			End
+			
+			'Update position (dynamic)
+			Select Self.Mode
+				Case GhostMode.Pen
+					'Reverse dir? (we need to change direction as soon as we enter required tile)
+					If (Self.Tile.Y<>17) Self.Dir=(Self.Dir+2) Mod 4						
+			End
 
-		'Determine required IsCentreTile xTileOffset
-		'Allows use to utilise the existing tile system inside the Pen
-		Local xTileOffset:Int=4
-		Local yTileOffset:Int=4
-		Select Self.Mode
-			Case GhostMode.Pen,GhostMode.PrepareLeavePen,GhostMode.LeavePen,GhostMode.EnterPen
-				xTileOffset=0
-				
-			Case GhostMode.ReturnPen
-				'Wait until we reach entry position
-				Local returnTile:=Self.GetTargetTile()
-				If (Self.Tile.X=returnTile.X And Self.Tile.Y=returnTile.Y) xTileOffset=0
+			'Is in tunnel?
+			If (Self.Tile.X>GridWidth And Self.Dir=Direction.Right)
+				'Swap to left
+				Self.SetPosition(-1,Self.Tile.Y,0,4)			
+			Elseif (Self.Tile.X<0 And Self.Dir=Direction.Left)
+				'Swap to right 
+				Self.SetPosition(GridWidth,Self.Tile.Y,7,4)			
+			End	
+	
+			'Update position (tile)
+			Local isCentreTile:bool=Self.IsCentreTile(Self.X,Self.Y,xTileOffset,yTileOffset)
+			If (isCentreTile)	
+				'Update direction?
+				Select Self.Mode
+					Case GhostMode.Pen	
+						'Do nothing	(this mode is using Dir not NextDir)							
+					Default
+						'Set
+						Self.Dir=Self.NextDir	
+						Self.PrevTile=Self.Tile			
+				End
+													
+				'Set next direction
+				Select Self.Mode
+					Case GhostMode.Pen	
+						'Ready to leave?					
+						If (Self.DotCounter>=Self.ReleaseOnDot And Self.Dir=Direction.Up)
+							'Set
+							Self.Mode=GhostMode.LeaveCentrePen
+							
+							'Validate (in LeaveCentrePen tile?)
+							Local targetTile:=Self.GetTargetTile()
+							If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y) Self.Mode=GhostMode.LeavePen
+							Self.Dir=Self.GetPenTargetDir(Self.Tile)
+							Self.NextDir=Self.Dir		
+						End If
+	
+					Case GhostMode.LeaveCentrePen,GhostMode.LeavePen
+						'Validate
+						Local targetTile:=Self.GetTargetTile()
+						If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
+							If (Self.Mode=GhostMode.LeavePen)
+								'Exited
+								Self.Mode=GhostMode.Scatter
+								Self.Dir=Direction.Left
+								Self.NextDir=Self.ExitPenDir						
+							Else
+								'Leave
+								Self.Mode=GhostMode.LeavePen
+								Self.Dir=Self.GetPenTargetDir(Self.Tile)
+								Self.NextDir=Self.Dir
+							End				
+						End
+	
+					Case GhostMode.ReturnPen
+						'Validate if returned to entry
+						Local targetTile:=Self.GetTargetTile()
+						If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
+							'Enter
+							Self.Mode=GhostMode.ReturnCentrePen
+							Self.Dir=Self.GetPenTargetDir(Self.Tile)	
+							Self.NextDir=Self.Dir
+						Else
+							'Return to entry
+							Self.NextDir=Self.GetTargetDir()				
+						End
+						
+					Case GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
+						Local targetTile:=Self.GetTargetTile()
+						If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
+							'Set
+							Self.Mode=GhostMode.ReturnHomePen
+	
+							'Validate
+							If (Self.Tile.X=Self.HomeTile.X And Self.Tile.Y=Self.HomeTile.Y)
+								'Arrived
+								Self.Mode=GhostMode.Pen
+								Self.Dir=Direction.Up
+								
+								'Temp
+								Self.DotCounter=0
+							Else
+								'Return
+								Self.Dir=Self.GetPenTargetDir(Self.Tile)
+								Self.NextDir=Self.Dir
+							End
+						End								
+									
+					Default	
+						'Set new direction and tile
+						Select Self.Mode
+							Case GhostMode.Chase,GhostMode.Scatter
+								'Set
+								Self.NextDir=GetTargetDir()
+	
+							Case GhostMode.Frightened
+								'NOT WORKING CURRENTLY
+								
+								'Note: There is a pseudo-random (PRNG) number to determine direction
+								'      if it cannot move in that direction then choose a direction
+								'      as follows: up,left,down,right
+								'Note: Need to make sure we don't return from existing direction 
+	
+								'TODO: Implement above
+								Self.NextDir=Self.GetNewDirection(Self.Tile)
+								'Self.SetDirection(Self.GetNewDirection(currentTile))
+						End		
+				End					
+			End
+	
+			'Update position
+			Super.Update()
+		
 		End
 		
-		'Update pen position (changes direction as soon as we enter required tile)
-		Select Self.Mode
-			Case GhostMode.Pen
-				'Reverse dir?
-				If (Self.Tile.Y<>17) Self.Dir=(Self.Dir+2) Mod 4						
-		End
-
-		'Check for centre of tile
-		Local isCentreTile:bool=Self.IsCentreTile(Self.X,Self.Y,xTileOffset,yTileOffset)
-		If (isCentreTile)	
-			'Update direction?
-			Select Self.Mode
-				Case GhostMode.Pen	
-					'Do nothing	(this mode is using Dir not NextDir)							
-				Default
-					'Set
-					Self.Dir=Self.NextDir	
-					Self.PrevTile=Self.Tile			
-			End
-						
-			'Is in tunnel?
-			'TODO: need to allow object to exit 'offscreen' before flipping
-			If (Self.Tile.X>=GridWidth-1 And Self.Dir=Direction.Right)
-				'Move to left
-				Self.SetPosition(0,Self.Tile.Y,0,4)			
-			Elseif (Self.Tile.X<=0 And Self.Dir=Direction.Left)
-				'Move to right 
-				Self.SetPosition(GridWidth-1,Self.Tile.Y,7,4)			
-			End	
-
-			'Set next direction
-			Select Self.Mode
-				Case GhostMode.Pen					
-					'Ready to leave?					
-					If (Self.DotCounter>=Self.ReleaseOnDot And Self.Dir=Direction.Up)
-						'Set
-						Self.Mode=GhostMode.PrepareLeavePen
-						Self.Dir=Self.GetTargetDir()
-						Self.NextDir=Self.Dir						
-					End If
-
-				Case GhostMode.PrepareLeavePen,GhostMode.LeavePen
-					'Validate
-					Local targetTile:=Self.GetTargetTile()
-					If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
-						'Validate
-						If (Self.Mode=GhostMode.LeavePen)
-							'Left pen
-							Self.Dir=Direction.Left
-							Self.NextDir=Self.ExitPenDir
-							Self.Mode=GhostMode.Chase
-						Else
-							'Leave
-							Self.NextDir=Direction.Up
-							Self.Mode=GhostMode.LeavePen	
-						End											
-					Else
-						'Move to centre					
-						Self.NextDir=GetTargetDir()					
-					End
-													
-				Case GhostMode.ReturnPen
-					'Temp
-					Self.NextDir=GetTargetDir()
-					
-					'NOT WORKING CURRENTLY
-					'Validate if returned to entry
-					'Local targetTile:=Self.GetTargetTile()
-					'If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
-					'	'Enter pen
-					'	Self.Mode=GhostMode.EnterPen
-					'	Self.Dir=Direction.Down
-					'	Self.PrevTile=Self.Tile		
-					'Else
-					'	'Set
-					'	Self.NextDir=GetTargetDir()				
-					'End
-					
-				Case GhostMode.EnterPen
-					'NOT WORKING CURRENTLY
-					
-					'Arrived
-					'If (Self.Tile.Y=17)
-					'	Self.Mode=GhostMode.Pen
-					'	Self.Dir=Direction.Down
-					'	Self.DotCounter=0
-					'End
-					
-				Default	
-					'Set new direction and tile
-					Select Self.Mode
-						Case GhostMode.Chase,GhostMode.Scatter
-							'Set
-							Self.NextDir=GetTargetDir()
-
-						Case GhostMode.Frightened
-							'NOT WORKING CURRENTLY
-							
-							'Note: There is a pseudo-random (PRNG) number to determine direction
-							'      if it cannot move in that direction then choose a direction
-							'      as follows: up,left,down,right
-							'Note: Need to make sure we don't return from existing direction 
-
-							'TODO: Implement above
-							Self.NextDir=Self.GetNewDirection(Self.Tile)
-							'Self.SetDirection(Self.GetNewDirection(currentTile))
-					End		
-			End					
-		End
-
-		'Update position
-		Super.Update()
-
 	End
 	
 	Method Render(canvas:Canvas) Override
@@ -461,7 +522,17 @@ Private
 		Local d:=New Vec2i(tile.X-targetTile.X,tile.Y-targetTile.Y)
 		Return (d.X*d.X+d.Y*d.y)
 	End
-
+	
+	Method GetPenTargetDir:Int(tile:Vec2i)
+		'DebugStop()
+		Local targetTile:=Self.GetTargetTile()
+		If (targetTile.X<tile.X) Return Direction.Left
+		If (targetTile.X>tile.X) Return Direction.Right
+		'If (targetTile.Y<tile.Y) Return Direction.Up
+		If (targetTile.Y>tile.Y) Return Direction.Down
+		Return Direction.Up
+	End
+	
 	Method GetTargetDir:Int()
 		'Prepare
 		Local nextTile:=Self.GetTile(Self.Tile,Self.NextDir)
@@ -507,13 +578,13 @@ Class BlinkyGhostSprite Extends GhostSprite
 	End
 
 	Method Reset() Override
-		Self.HomeTile=New Vec2i(14,14)
-		Self.SetPosition(Self.HomeTile,0,4)
+		Self.StartTile=New Vec2i(14,14)
+		Self.HomeTile=New Vec2i(14,18)
 		Self.ScatterTargetTile=New Vec2i(25,0)
+		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Left
 		Self.NextDir=Self.Dir
-		Self.Mode=GhostMode.Chase
-		Self.SetSpeed()
+		Self.Mode=GhostMode.Scatter
 		Self.DotCounter=0
 		Self.ReleaseOnDot=0
 	End
@@ -538,13 +609,13 @@ Class PinkyGhostSprite Extends GhostSprite
 	End
 
 	Method Reset() Override
-		Self.HomeTile=New Vec2i(14,17)
+		Self.StartTile=New Vec2i(14,17)
+		Self.HomeTile=New Vec2i(14,18)
 		Self.ScatterTargetTile=New Vec2i(2,0)
-		Self.SetPosition(Self.HomeTile,0,4)
+		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Down
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.SetSpeed()
 		Self.DotCounter=0
 		Self.ReleaseOnDot=0
 	End
@@ -569,9 +640,9 @@ Class PinkyGhostSprite Extends GhostSprite
 				End
 				
 				'Validate inside grid area
-				If(targetTile.X>=GridWidth) targetTile.X=GridWidth-1
+				If(targetTile.X>=GridWidth) targetTile.X=GridWidth
 				If(targetTile.X<0) targetTile.X=0
-				If(targetTile.Y>=GridHeight) targetTile.Y=GridHeight-1
+				If(targetTile.Y>=GridHeight) targetTile.Y=GridHeight
 				If(targetTile.Y<0) targetTile.Y=0								
 			Case GhostMode.Scatter
 				targetTile=ScatterTargetTile				
@@ -589,15 +660,15 @@ Class InkyGhostSprite Extends GhostSprite
 	End
 
 	Method Reset() Override
-		Self.HomeTile=New Vec2i(12,17)
+		Self.StartTile=New Vec2i(12,17)
+		Self.HomeTile=New Vec2i(12,18)
 		Self.ScatterTargetTile=New Vec2i(27,35)
-		Self.SetPosition(Self.HomeTile,0,4)
+		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Up
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=100
+		Self.ReleaseOnDot=150
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -629,7 +700,8 @@ Class InkyGhostSprite Extends GhostSprite
 				If(targetTile.X>=GridWidth) targetTile.X=GridWidth-1
 				If(targetTile.X<0) targetTile.X=0
 				If(targetTile.Y>=GridHeight) targetTile.Y=GridHeight-1
-				If(targetTile.Y<0) targetTile.Y=0							
+				If(targetTile.Y<0) targetTile.Y=0
+											
 			case GhostMode.Scatter
 				targetTile=ScatterTargetTile			
 		End
@@ -646,15 +718,15 @@ Class ClydeGhostSprite Extends GhostSprite
 	End
 
 	Method Reset() Override
-		Self.HomeTile=New Vec2i(16,17)
+		Self.StartTile=New Vec2i(16,17)
+		Self.HomeTile=New Vec2i(16,18)
 		Self.ScatterTargetTile=New Vec2i(0,35)
-		Self.SetPosition(Self.HomeTile,0,4)
+		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Up
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.SetSpeed()
 		Self.DotCounter=0
-		Self.ReleaseOnDot=350
+		Self.ReleaseOnDot=300
 	End
 		
 	Method GetTargetTile:Vec2i() Override
@@ -682,11 +754,10 @@ Class PacmanSprite Extends Sprite
 	End
 
 	Method Reset() Override
-		Self.HomeTile=New Vec2i(14,26)
-		Self.SetPosition(Self.HomeTile,0,4)
+		Self.StartTile=New Vec2i(14,26)
+		Self.HomeTile=Self.StartTile
+		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Left
-		Self.SetSpeed()
-		Self.Score=0
 	End
 			
 	Method Update() Override
@@ -695,8 +766,8 @@ Class PacmanSprite Extends Sprite
 		Local currentTile:Vec2i=Self.Tile
 		
 		'In tunnel?
-		If (isCentreTile And currentTile.X>=GridWidth-1 And Self.Dir=Direction.Right) Self.SetPosition(0,currentTile.Y,0,4)
-		If (isCentreTile And currentTile.X<=0 And Self.Dir=Direction.Left) Self.SetPosition(GridWidth-1,currentTile.Y,7,4)
+		If (currentTile.X>GridWidth And Self.Dir=Direction.Right) Self.SetPosition(-1,currentTile.Y,0,4)
+		If (currentTile.X<0 And Self.Dir=Direction.Left) Self.SetPosition(GridWidth,currentTile.Y,7,4)
 				
 		'Validate keys
 		Local isKeyUp:Bool=Keyboard.KeyDown(Key.Up)
@@ -709,13 +780,15 @@ Class PacmanSprite Extends Sprite
 		If (Not isKeysPressed And isCentreTile And Not Self.CanMoveDirection(currentTile,Self.Dir)) Return
 				
 		'Eat pill?
-		If (Grid[2,currentTile.X,currentTile.Y]=1)
-			'Collect pill
-			Grid[2,currentTile.X,currentTile.Y]=0
-			Self.Score+=10
-			
-			'Pause for this frame when eating pills
-			Return
+		If (currentTile.X>0 And currentTile.X<GridWidth)
+			If (Grid[2,currentTile.X,currentTile.Y]=1)
+				'Collect pill
+				Grid[2,currentTile.X,currentTile.Y]=0
+				Self.Score+=10
+				
+				'Pause for this frame when eating pills
+				Return
+			End
 		End
 		
 		'Change direction?

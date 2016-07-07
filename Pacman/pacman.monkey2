@@ -18,7 +18,7 @@ Global DisplayOffset:=New Vec2i(0,0)
 
 Function Main()
 	New AppInstance()
-	window = New PacmanWindow("Pacman",1024,768, WindowFlags.Resizable)	'Fullscreen/Resizable
+	window = New PacmanWindow("Pacman",1024,768,WindowFlags.Resizable)	'Fullscreen/Resizable
 	App.Run()
 End
 
@@ -39,7 +39,7 @@ Class PacmanWindow Extends Window
 		'Virtual Resolution
 		Layout = "letterbox"
 		MinSize=New Vec2i(224,288)
-		'SwapInterval=0	
+		MaxSize=New Vec2i(width,height)
 		
 		' Setup
 		InitialiseSprites()
