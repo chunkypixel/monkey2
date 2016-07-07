@@ -1,17 +1,20 @@
 Namespace pacman
 
 'DEV NOTES
-'-update ghost movement to determine next move from prior tile and store for use on next 'Centering'
-'-Allow objects to exit 'offscreen' before flipping when in tunnels
 '-create a 'game' class to track game-related states such as dot counters and ghost modes
+'-frightened mode need to be changed so this mode works inside pen
+'-swap modes between scatter and chase
+'-global pill collection counter (utilised after first death)
+'-die when touching ghosts
 
 'Sprites
-#Import "../images/yellow.png"
+#Import "../images/pacman.png"
 #Import "../images/blinky.png"
 #Import "../images/pinky.png"
 #Import "../images/clyde.png"
 #Import "../images/inky.png"
 #Import "../images/eyes.png"
+#Import "../images/frightened.png"
 
 Global Sprites:=New Stack<Sprite> ' Contains all the sprites displayed on the screen
 Global Pacman:PacmanSprite
@@ -20,8 +23,7 @@ Global Pinky:PinkyGhostSprite
 Global Clyde:ClydeGhostSprite
 Global Inky:InkyGhostSprite
 Global Eyes:ImageCollection
-
-Global DotCounter:Int=0
+Global Frightened:ImageCollection
 
 Enum Direction
 	Up
@@ -45,9 +47,9 @@ End
 Function InitialiseSprites()
 	'Images
 	Eyes=New ImageCollection("asset::eyes.png",16,16)
-
+	Frightened=New ImageCollection("asset::frightened.png",16,16)
 	'Sprites
-	Pacman=New PacmanSprite("asset::yellow.png")
+	Pacman=New PacmanSprite("asset::pacman.png")
 	Blinky=New BlinkyGhostSprite("asset::blinky.png")
 	Pinky=New PinkyGhostSprite("asset::pinky.png")
 	Clyde=New ClydeGhostSprite("asset::clyde.png")
@@ -69,8 +71,6 @@ Function InitialiseSprites()
 End
 
 Function UpdateSprites()
-	DotCounter+=1
-	
 	For Local i:=0 Until Sprites.Length
 		If (Sprites[i].Enabled) Sprites[i].Update()
 	Next
@@ -92,24 +92,38 @@ Function SetGhostMode:Void(mode:Int)
 	For Local i:=0 Until Sprites.Length
 		Local ghost:GhostSprite=Cast<GhostSprite>(Sprites[i])
 		If (ghost<>Null) 
+			'Update
 			Select ghost.Mode
 				Case GhostMode.Chase,GhostMode.Scatter,GhostMode.Frightened
+					'Reverse? (unless currently frightened)
+					ghost.ReverseDirection=(ghost.Mode<>GhostMode.Frightened)
 					ghost.Mode=mode
 			End
+
 		End
 	Next
 End
 
-Function SetGhostReverseDirection:Void()
-	For Local i:=0 Until Sprites.Length
-		Local ghost:GhostSprite=Cast<GhostSprite>(Sprites[i])
-		If (ghost<>Null) 
-			Select ghost.Mode
-				Case GhostMode.Chase,GhostMode.Scatter
-					ghost.ReverseDirection=True
-			End
-		End
-	Next
+Function ActivateGhostPillCounter(currentGhost:GhostSprite)
+	'Prepare
+	Local nextGhost:GhostSprite=Null
+	
+	'Validate
+	If (currentGhost=Blinky) nextGhost=Pinky
+	If (currentGhost=Pinky) nextGhost=Inky
+	If (currentGhost=Inky) nextGhost=Clyde
+	
+	'Activate?
+	currentGhost.PillCounterActive=False
+	If (nextGhost<>Null) nextGhost.PillCounterActive=True
+End
+
+Function IncrementPillCounter()
+	Pacman.PillsCollected+=1
+	If (Blinky.PillCounterActive) Blinky.PillCounter+=1
+	If (Pinky.PillCounterActive) Pinky.PillCounter+=1
+	If (Inky.PillCounterActive) Inky.PillCounter+=1
+	If (Clyde.PillCounterActive) Clyde.PillCounter+=1
 End
 
 Function SetSpriteSpeed:Void()
@@ -258,14 +272,14 @@ End
 
 Class GhostSprite Extends Sprite
 	Field NextDir:Int=Direction.Up
+	Field PrevDir:Int=0
 	Field PrevTile:=New Vec2i(0,0)
-	Field ScatterTargetTile:=New Vec2i(0,0)
+	Field ScatterTile:=New Vec2i(0,0)
 	Field Mode:Int=GhostMode.Chase
 	Field ReverseDirection:Bool=False
-	Field ExitPenDir:Int=Direction.Left
-	Field DotCounter:Int=0
-	Field ReleaseOnDot:Int=0
-	Field DotCounterActive:Bool=False
+	Field PillCounter:Int=0
+	Field ReleaseOnPill:Int=0
+	Field PillCounterActive:Bool=False
 	
 	Method New(asset:string)
 		Super.New(asset)
@@ -283,6 +297,8 @@ Class GhostSprite Extends Sprite
 				targetTile=New Vec2i(14,18)
 			Case GhostMode.ReturnHomePen
 				targetTile=Self.HomeTile			
+			Case GhostMode.Frightened
+				targetTile=Self.ScatterTile
 		End
 		Return targetTile
 	End
@@ -311,10 +327,16 @@ Class GhostSprite Extends Sprite
 		End
 	End
 	
+	Method SetDirection(dir:Int)
+		Self.PrevDir=Self.Dir
+		Self.Dir=dir
+		Self.NextDir=dir
+	End
+	
 	Method GetAnimation:ImageCollection() Override
 		Select Self.Mode
 			Case GhostMode.Frightened
-			
+				Return Frightened
 			Case GhostMode.ReturnPen,GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
 				Return Eyes
 		End
@@ -336,10 +358,7 @@ Class GhostSprite Extends Sprite
 	Method Update() Override
 		'Debugging
 		If (Not window.MoveGhosts) return
-		
-		'Temp:Increment
-		Self.DotCounter+=1
-		
+				
 		'Repeat (speed up return to pen)
 		Local updateIndex:Int=1
 		If(Self.Mode=GhostMode.ReturnPen) updateIndex=2
@@ -374,7 +393,7 @@ Class GhostSprite Extends Sprite
 			Select Self.Mode
 				Case GhostMode.Pen
 					'Reverse dir? (we need to change direction as soon as we enter required tile)
-					If (Self.Tile.Y<>17) Self.Dir=(Self.Dir+2) Mod 4						
+					If (Self.Tile.Y<>17) Self.SetDirection((Self.Dir+2) Mod 4)						
 			End
 
 			'Is in tunnel?
@@ -395,7 +414,7 @@ Class GhostSprite Extends Sprite
 						'Do nothing	(this mode is using Dir not NextDir)							
 					Default
 						'Set
-						Self.Dir=Self.NextDir	
+						Self.SetDirection(Self.NextDir)	
 						Self.PrevTile=Self.Tile			
 				End
 													
@@ -403,15 +422,15 @@ Class GhostSprite Extends Sprite
 				Select Self.Mode
 					Case GhostMode.Pen	
 						'Ready to leave?					
-						If (Self.DotCounter>=Self.ReleaseOnDot And Self.Dir=Direction.Up)
+						If (Self.PillCounter>=Self.ReleaseOnPill And Self.Dir=Direction.Up)
 							'Set
 							Self.Mode=GhostMode.LeaveCentrePen
+							ActivateGhostPillCounter(Self)
 							
 							'Validate (in LeaveCentrePen tile?)
 							Local targetTile:=Self.GetTargetTile()
 							If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y) Self.Mode=GhostMode.LeavePen
-							Self.Dir=Self.GetPenTargetDir(Self.Tile)
-							Self.NextDir=Self.Dir		
+							Self.SetDirection(Self.GetPenTargetDir(Self.Tile))	
 						End If
 	
 					Case GhostMode.LeaveCentrePen,GhostMode.LeavePen
@@ -421,13 +440,16 @@ Class GhostSprite Extends Sprite
 							If (Self.Mode=GhostMode.LeavePen)
 								'Exited
 								Self.Mode=GhostMode.Scatter
-								Self.Dir=Direction.Left
-								Self.NextDir=Self.ExitPenDir						
+								Self.SetDirection(Direction.Left)
+								'Reverse?
+								If (Self.ReverseDirection) 
+									Self.NextDir=(Self.NextDir+2) Mod 4	
+									Self.ReverseDirection=False					
+								End
 							Else
 								'Leave
 								Self.Mode=GhostMode.LeavePen
-								Self.Dir=Self.GetPenTargetDir(Self.Tile)
-								Self.NextDir=Self.Dir
+								Self.SetDirection(Self.GetPenTargetDir(Self.Tile))
 							End				
 						End
 	
@@ -437,8 +459,7 @@ Class GhostSprite Extends Sprite
 						If (Self.Tile.X=targetTile.X And Self.Tile.Y=targetTile.Y)
 							'Enter
 							Self.Mode=GhostMode.ReturnCentrePen
-							Self.Dir=Self.GetPenTargetDir(Self.Tile)	
-							Self.NextDir=Self.Dir
+							Self.SetDirection(Self.GetPenTargetDir(Self.Tile))	
 						Else
 							'Return to entry
 							Self.NextDir=Self.GetTargetDir()				
@@ -454,18 +475,25 @@ Class GhostSprite Extends Sprite
 							If (Self.Tile.X=Self.HomeTile.X And Self.Tile.Y=Self.HomeTile.Y)
 								'Arrived
 								Self.Mode=GhostMode.Pen
-								Self.Dir=Direction.Up
-								
-								'Temp
-								Self.DotCounter=0
+								Self.SetDirection(Direction.Up)
 							Else
 								'Return
-								Self.Dir=Self.GetPenTargetDir(Self.Tile)
-								Self.NextDir=Self.Dir
+								Self.SetDirection(Self.GetPenTargetDir(Self.Tile))
 							End
 						End								
 									
 					Default	
+						'Reverse direction?
+						If (Self.ReverseDirection)
+							'Validate (if in corner a straight reverse may not work)
+							Local reverseDir:Int=(Self.Dir+2) Mod 4
+							If (Not Self.CanMoveDirection(Self.Tile,reverseDir)) reverseDir=(Self.PrevDir+2) Mod 4
+							
+							'Update
+							Self.SetDirection(reverseDir)
+							Self.ReverseDirection=False
+						End
+												
 						'Set new direction and tile
 						Select Self.Mode
 							Case GhostMode.Chase,GhostMode.Scatter
@@ -474,6 +502,7 @@ Class GhostSprite Extends Sprite
 	
 							Case GhostMode.Frightened
 								'NOT WORKING CURRENTLY
+								'Self.NextDir=Self.GetNewDirection(Self.Tile)
 								
 								'Note: There is a pseudo-random (PRNG) number to determine direction
 								'      if it cannot move in that direction then choose a direction
@@ -481,15 +510,21 @@ Class GhostSprite Extends Sprite
 								'Note: Need to make sure we don't return from existing direction 
 	
 								'TODO: Implement above
-								Self.NextDir=Self.GetNewDirection(Self.Tile)
-								'Self.SetDirection(Self.GetNewDirection(currentTile))
-						End		
+								Self.NextDir=GetTargetDir()
+						End	
 				End					
 			End
 	
 			'Update position
 			Super.Update()
-		
+			
+			'Collision
+			If (Self.Tile.X=Pacman.Tile.X And Self.Tile.Y=Pacman.Tile.Y)
+				'Temp: Return to pen
+				Self.Mode=GhostMode.ReturnPen
+				Pacman.Score+=50
+			End
+			
 		End
 		
 	End
@@ -524,7 +559,6 @@ Private
 	End
 	
 	Method GetPenTargetDir:Int(tile:Vec2i)
-		'DebugStop()
 		Local targetTile:=Self.GetTargetTile()
 		If (targetTile.X<tile.X) Return Direction.Left
 		If (targetTile.X>tile.X) Return Direction.Right
@@ -580,13 +614,13 @@ Class BlinkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.StartTile=New Vec2i(14,14)
 		Self.HomeTile=New Vec2i(14,18)
-		Self.ScatterTargetTile=New Vec2i(25,0)
+		Self.ScatterTile=New Vec2i(25,0)
 		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Left
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Scatter
-		Self.DotCounter=0
-		Self.ReleaseOnDot=0
+		Self.PillCounter=0
+		Self.ReleaseOnPill=0
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -594,7 +628,7 @@ Class BlinkyGhostSprite Extends GhostSprite
 		local targetTile:Vec2i=Super.GetTargetTile()
 		Select Self.Mode
 			case GhostMode.Scatter
-				targetTile=ScatterTargetTile
+				targetTile=ScatterTile
 		End
 		Return targetTile
 	End
@@ -611,13 +645,14 @@ Class PinkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.StartTile=New Vec2i(14,17)
 		Self.HomeTile=New Vec2i(14,18)
-		Self.ScatterTargetTile=New Vec2i(2,0)
+		Self.ScatterTile=New Vec2i(2,0)
 		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Down
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.DotCounter=0
-		Self.ReleaseOnDot=0
+		Self.PillCounter=0
+		Self.ReleaseOnPill=0
+		Self.PillCounterActive=True
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -645,7 +680,7 @@ Class PinkyGhostSprite Extends GhostSprite
 				If(targetTile.Y>=GridHeight) targetTile.Y=GridHeight
 				If(targetTile.Y<0) targetTile.Y=0								
 			Case GhostMode.Scatter
-				targetTile=ScatterTargetTile				
+				targetTile=ScatterTile				
 		End
 		Return targetTile
 	End
@@ -662,13 +697,13 @@ Class InkyGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.StartTile=New Vec2i(12,17)
 		Self.HomeTile=New Vec2i(12,18)
-		Self.ScatterTargetTile=New Vec2i(27,35)
+		Self.ScatterTile=New Vec2i(27,35)
 		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Up
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.DotCounter=0
-		Self.ReleaseOnDot=150
+		Self.PillCounter=0
+		Self.ReleaseOnPill=30
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -703,7 +738,7 @@ Class InkyGhostSprite Extends GhostSprite
 				If(targetTile.Y<0) targetTile.Y=0
 											
 			case GhostMode.Scatter
-				targetTile=ScatterTargetTile			
+				targetTile=ScatterTile			
 		End
 		Return targetTile	
 	End
@@ -720,13 +755,13 @@ Class ClydeGhostSprite Extends GhostSprite
 	Method Reset() Override
 		Self.StartTile=New Vec2i(16,17)
 		Self.HomeTile=New Vec2i(16,18)
-		Self.ScatterTargetTile=New Vec2i(0,35)
+		Self.ScatterTile=New Vec2i(0,35)
 		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Up
 		Self.NextDir=Self.Dir
 		Self.Mode=GhostMode.Pen
-		Self.DotCounter=0
-		Self.ReleaseOnDot=300
+		Self.PillCounter=0
+		Self.ReleaseOnPill=60
 	End
 		
 	Method GetTargetTile:Vec2i() Override
@@ -736,9 +771,9 @@ Class ClydeGhostSprite Extends GhostSprite
 			Case GhostMode.Chase
 				'If within 8 tiles of pacman target him otherwise use scatter position
 				Local distanceToPacman:Int=Sqrt(Self.GetDistanceToTarget(Self.Tile,Pacman.Tile))
-				If (distanceToPacman>8) targetTile=ScatterTargetTile				 				
+				If (distanceToPacman>8) targetTile=ScatterTile				 				
 			case GhostMode.Scatter
-				targetTile=ScatterTargetTile				
+				targetTile=ScatterTile				
 		End
 		Return targetTile	
 	End
@@ -747,6 +782,8 @@ End
 
 Class PacmanSprite Extends Sprite
 	Field Score:Int=0
+	Field PillsCollected:Int=0
+	Field PauseFrame:Int=0
 	
 	Method New(image:string)
 		Super.New(image)
@@ -761,6 +798,12 @@ Class PacmanSprite Extends Sprite
 	End
 			
 	Method Update() Override
+		'Pause?
+		If (Self.PauseFrame>0)
+			Self.PauseFrame-=1
+			Return
+		End
+		
 		'Prepare
 		Local isCentreTile:Bool = Self.IsCentreTile(Self.X,Self.Y)
 		Local currentTile:Vec2i=Self.Tile
@@ -779,14 +822,23 @@ Class PacmanSprite Extends Sprite
 		'Continue? (auto)
 		If (Not isKeysPressed And isCentreTile And Not Self.CanMoveDirection(currentTile,Self.Dir)) Return
 				
-		'Eat pill?
+		'Anything to eat?
 		If (currentTile.X>0 And currentTile.X<GridWidth)
 			If (Grid[2,currentTile.X,currentTile.Y]=1)
-				'Collect pill
+				'Pill (block 1)
 				Grid[2,currentTile.X,currentTile.Y]=0
 				Self.Score+=10
-				
-				'Pause for this frame when eating pills
+				IncrementPillCounter()
+				'Pause for 1 frame (this one) when eating pills
+				Return
+			Elseif (Grid[2,currentTile.X,currentTile.Y]>=2)
+				'Energizer (block 2-3)
+				Grid[2,currentTile.X,currentTile.Y]=0
+				Self.Score+=50
+				'Activate frightened mode
+				SetGhostMode(GhostMode.Frightened)
+				'Pause for 3 frames (this one plus 2 others) when eating energizers
+				Self.PauseFrame=2
 				Return
 			End
 		End
