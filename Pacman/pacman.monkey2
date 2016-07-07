@@ -23,7 +23,10 @@ Function Main()
 End
 
 Class PacmanWindow Extends Window
-
+Private
+	Field _timer:Timer
+	Field _updateIndex:Int=0
+Public
 	Field IsPaused:Bool
 	Field IsSuspended:Bool
 	Field ShowFPS:Bool=True
@@ -33,7 +36,10 @@ Class PacmanWindow Extends Window
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
 		Super.New(title, width, height, flags)
-
+		
+		'Timer
+		_timer = New Timer(120,OnUpdate)
+		
 		'Virtual Resolution
 		Layout = "letterbox"
 		MinSize=New Vec2i(224,288)
@@ -50,9 +56,18 @@ Class PacmanWindow Extends Window
 		
 	End Method
 	
+	Method OnUpdate()
+		' Update
+		If (_updateIndex=0) Pacman.Update()
+		if (_updateIndex=1) UpdateGhosts()
+		_updateIndex=(_updateIndex+1) Mod 2
+		'App.RequestRender()
+	
+	End
+	
 	Method OnRender(canvas:Canvas) Override
 		' Update
-		UpdateSprites()
+		'UpdateSprites()
 		
 		' Render
 		App.RequestRender()
