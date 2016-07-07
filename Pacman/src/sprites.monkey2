@@ -105,14 +105,11 @@ Function SetGhostMode:Void(mode:Int)
 End
 
 Function ActivateGhostPillCounter(currentGhost:GhostSprite)
-	'Prepare
-	Local nextGhost:GhostSprite=Null
-	
 	'Validate
+	Local nextGhost:GhostSprite=Null
 	If (currentGhost=Blinky) nextGhost=Pinky
 	If (currentGhost=Pinky) nextGhost=Inky
 	If (currentGhost=Inky) nextGhost=Clyde
-	
 	'Activate?
 	currentGhost.PillCounterActive=False
 	If (nextGhost<>Null) nextGhost.PillCounterActive=True
@@ -120,6 +117,7 @@ End
 
 Function IncrementPillCounter()
 	Pacman.PillsCollected+=1
+	'Increment active ghost
 	If (Blinky.PillCounterActive) Blinky.PillCounter+=1
 	If (Pinky.PillCounterActive) Pinky.PillCounter+=1
 	If (Inky.PillCounterActive) Inky.PillCounter+=1
@@ -130,7 +128,6 @@ Function SetSpriteSpeed:Void()
 	For Local i:=0 Until Sprites.Length
 		Sprites[i].SetSpeed()				
 	Next
-	
 End
 
 Function WrapMod:Int(a:Int,n:Int)
@@ -210,8 +207,7 @@ Class Sprite
 		Local images:ImageCollection=Self.GetAnimation()
 		' Validate
 		If (frame=-1) frame=Self.Frame
-		If (flip) scale=New Vec2f(-1,1)
-		
+		If (flip) scale=New Vec2f(-1,1)	
 		' Draw
 		canvas.BlendMode=Self.Blend
 		canvas.Color=Self.Color
@@ -616,8 +612,7 @@ Class BlinkyGhostSprite Extends GhostSprite
 		Self.HomeTile=New Vec2i(14,18)
 		Self.ScatterTile=New Vec2i(25,0)
 		Self.SetPosition(Self.StartTile,0,4)
-		Self.Dir=Direction.Left
-		Self.NextDir=Self.Dir
+		Self.SetDirection(Direction.Left)
 		Self.Mode=GhostMode.Scatter
 		Self.PillCounter=0
 		Self.ReleaseOnPill=0
@@ -647,8 +642,7 @@ Class PinkyGhostSprite Extends GhostSprite
 		Self.HomeTile=New Vec2i(14,18)
 		Self.ScatterTile=New Vec2i(2,0)
 		Self.SetPosition(Self.StartTile,0,4)
-		Self.Dir=Direction.Down
-		Self.NextDir=Self.Dir
+		Self.SetDirection(Direction.Down)
 		Self.Mode=GhostMode.Pen
 		Self.PillCounter=0
 		Self.ReleaseOnPill=0
@@ -699,8 +693,7 @@ Class InkyGhostSprite Extends GhostSprite
 		Self.HomeTile=New Vec2i(12,18)
 		Self.ScatterTile=New Vec2i(27,35)
 		Self.SetPosition(Self.StartTile,0,4)
-		Self.Dir=Direction.Up
-		Self.NextDir=Self.Dir
+		Self.SetDirection(Direction.Up)
 		Self.Mode=GhostMode.Pen
 		Self.PillCounter=0
 		Self.ReleaseOnPill=30
@@ -732,11 +725,13 @@ Class InkyGhostSprite Extends GhostSprite
 				targetTile.Y+=-offsetFromBlinky.Y
 				
 				'Validate inside grid area
-				If(targetTile.X>=GridWidth) targetTile.X=GridWidth-1
+				If(targetTile.X>GridWidth) targetTile.X=GridWidth
 				If(targetTile.X<0) targetTile.X=0
-				If(targetTile.Y>=GridHeight) targetTile.Y=GridHeight-1
+				If(targetTile.Y>GridHeight) targetTile.Y=GridHeight
 				If(targetTile.Y<0) targetTile.Y=0
-											
+				'targetTile.X = WrapMod(targetTile.X,GridWidth)
+				'targetTile.Y = WrapMod(targetTile.Y,GridHeight)
+															
 			case GhostMode.Scatter
 				targetTile=ScatterTile			
 		End
@@ -757,8 +752,7 @@ Class ClydeGhostSprite Extends GhostSprite
 		Self.HomeTile=New Vec2i(16,18)
 		Self.ScatterTile=New Vec2i(0,35)
 		Self.SetPosition(Self.StartTile,0,4)
-		Self.Dir=Direction.Up
-		Self.NextDir=Self.Dir
+		Self.SetDirection(Direction.Up)
 		Self.Mode=GhostMode.Pen
 		Self.PillCounter=0
 		Self.ReleaseOnPill=60
