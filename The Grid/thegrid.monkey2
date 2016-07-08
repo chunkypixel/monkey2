@@ -17,7 +17,7 @@ Global amnt:Float=10
 
 Function Main()
 	New AppInstance()
-	window = New MainWindow("The Grid",1024,768,WindowFlags.Fullscreen)	'Fullscreen/Resizable
+	window = New MainWindow("The Grid",640,480,WindowFlags.Fullscreen)	'Fullscreen/Resizable
 	App.Run()
 End
 
@@ -42,7 +42,7 @@ Public
 		Mouse.PointerVisible=True	
 		
 		'Initialise
-		Grid=New WonderGrid()
+		Grid=New WonderGrid(width,height)
 		'Grid.Size=GridSize.Small
 		
 	End Method

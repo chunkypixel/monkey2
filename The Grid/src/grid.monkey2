@@ -213,6 +213,9 @@ Public
 				Self.RenderGridLines6B(canvas,Self.Opacity)
 		End
 		
+		'Reset
+		canvas.Alpha=1.0
+		canvas.Color=Color.White
 	End
 		
 	Method Shockwave(x:Int,y:Int)
