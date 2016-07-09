@@ -24,6 +24,7 @@ End
 Class MainWindow Extends Window
 Private
 	Field _gridStyle:Int=0
+	Field _gridAnimation:Int=0
 Public
 	Field IsPaused:Bool
 	Field IsSuspended:Bool
@@ -43,32 +44,48 @@ Public
 		
 		'Initialise
 		Grid=New WonderGrid(width,height)
-		'Grid.Size=GridSize.Small
-		
+		'Grid.Size=GridSize.Small	
 	End Method
 		
 	Method OnRender(canvas:Canvas) Override
 		'Interaction
-		If (Keyboard.KeyDown(Key.F1)) Grid.Shockwave(Mouse.X,Mouse.Y)
-		If (Keyboard.KeyDown(Key.F2)) Grid.BombShockwave(Mouse.X,Mouse.Y)
-		If (Keyboard.KeyDown(Key.F3)) Grid.Pull(Mouse.X,Mouse.Y,sz,amnt)
-		If (Keyboard.KeyDown(Key.F4)) Grid.Push(Mouse.X,Mouse.Y,sz,amnt/4)
+		'If (Keyboard.KeyDown(Key.F1)) Grid.Shockwave(Mouse.X,Mouse.Y)
+		'If (Keyboard.KeyDown(Key.F2)) Grid.BombShockwave(Mouse.X,Mouse.Y)
+		'If (Keyboard.KeyDown(Key.F3)) Grid.Pull(Mouse.X,Mouse.Y,sz,amnt)
+		'If (Keyboard.KeyDown(Key.F4)) Grid.Push(Mouse.X,Mouse.Y,sz,amnt/4)
 		
-		'Change style
-		If (Mouse.ButtonReleased(MouseButton.Left)) _gridStyle=(_gridStyle+1) Mod 7
+		'Change style and animation state
+		If (Keyboard.KeyReleased(Key.S)) _gridStyle=(_gridStyle+1) Mod 7
+		If (Keyboard.KeyReleased(Key.A)) _gridAnimation=(_gridAnimation+1) Mod 4
+		
+		'Fire
+		If (Mouse.ButtonDown(MouseButton.Left))
+			Select _gridAnimation
+				Case 0
+					Grid.Shockwave(Mouse.X,Mouse.Y)
+				Case 1
+					Grid.BombShockwave(Mouse.X,Mouse.Y)
+				Case 2
+					Grid.Pull(Mouse.X,Mouse.Y,sz,amnt)
+				Case 3
+					Grid.Push(Mouse.X,Mouse.Y,sz,amnt/4)
+			End
+		End
 		
 		' Update
 		Grid.Update()
-	
+		
 		' Render
 		App.RequestRender()
 		Grid.Render(canvas,_gridStyle)		
 		
 		'System
 		canvas.Color=Color.White
-		If (ShowFPS) canvas.DrawText("FPS-"+App.FPS,0,0)
+		If (ShowFPS) canvas.DrawText("FPS:"+App.FPS,0,0)
+		canvas.DrawText("Style:"+_gridStyle,0,15)
+		canvas.DrawText("Animation:"+_gridAnimation,0,30)
 		
-	End Method
+	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override	
 		Select event.Type
