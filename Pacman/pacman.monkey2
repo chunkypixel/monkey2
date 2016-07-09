@@ -23,23 +23,17 @@ Function Main()
 End
 
 Class PacmanWindow Extends Window
-Private
-	Field _timer:Timer
-	Field _updateIndex:Int=0
-Public
 	Field IsPaused:Bool
 	Field IsSuspended:Bool
 	Field ShowFPS:Bool=True
 	Field IsDebug:Bool=False
 	Field MoveGhosts:Bool=True
+	Field UpdateTimer:Timer
 	
 	Method New(title:String, width:Int, height:Int, flags:WindowFlags)
 		' Setup display
 		Super.New(title, width, height, flags)
-		
-		'Timer
-		_timer = New Timer(120,OnUpdate)
-		
+				
 		'Virtual Resolution
 		Layout = "letterbox"
 		MinSize=New Vec2i(224,288)
@@ -50,23 +44,23 @@ Public
 		InitialiseSprites()
 		InitialiseGrid()
 		InitialiseFont()
-		
-		'Random Seed
-		'SeedRnd(12345678)
-		
+				
+		'Timer
+		UpdateTimer=New Timer(120,OnUpdateTimer)
+						
 	End Method
+		
+	Method OnMeasure:Vec2i() Override
+		Return New Vec2i(224,288)
+	End
 	
-	Method OnUpdate()
-		' Update
-		If (_updateIndex=0) Pacman.Update()
-		if (_updateIndex=1) UpdateGhosts()
-		_updateIndex=(_updateIndex+1) Mod 2
-		'App.RequestRender()
-	
+	Method OnUpdateTimer()
+		'Update
+		UpdateSprites()	
 	End
 	
 	Method OnRender(canvas:Canvas) Override
-		' Update
+		'Update
 		'UpdateSprites()
 		
 		' Render
@@ -126,4 +120,56 @@ Public
 		End
 	End
 	
+End Class
+
+Class FixedTime
+
+	Method New()
+		UpdateFrequency = 60
+	End Method
+
+	Property UpdateFrequency:Double()
+		Return _updateFrequency
+	Setter( value:Double )
+		_updateFrequency = value
+		_deltatime = 1000.0:Double / value
+	End
+
+	Property DeltaTime:Double()
+		Return _deltatime
+	End
+
+	Property Tween:Double()
+		Return _accumulator / _deltatime
+	End
+
+	Method Reset:Void()
+		_time = Millisecs()
+		_accumulator = 0
+	End Method
+
+	Method Update:Void()
+		Local thistime:Double = Millisecs()
+		Local passedtime:Double = thistime - _time
+		_time = thistime
+		_accumulator+=passedtime
+	End Method
+
+
+	Method TimeStepNeeded:Bool()
+		If _accumulator >= _deltatime
+			_accumulator-= _deltatime
+			Return True
+		Endif
+		Return False
+	End Method
+
+	Private
+
+	field _updateFrequency:Double
+	Field _accumulator:Double
+	Field _deltatime:Double
+	Field _time:Double
+	Field _tween:Double
+
 End Class

@@ -72,15 +72,9 @@ End
 
 Function UpdateSprites()
 	For Local i:=0 Until Sprites.Length
+		'Process
+		Sprites[i].Timer.Update()
 		If (Sprites[i].Enabled) Sprites[i].Update()
-	Next
-End
-Function UpdateGhosts()
-	For Local i:=0 Until Sprites.Length
-		If (Sprites[i].Enabled) 
-			Local ghost:GhostSprite=Cast<GhostSprite>(Sprites[i])
-			If (ghost<>Null) ghost.Update()
-		End
 	Next
 End
 
@@ -97,6 +91,7 @@ Function ResetSprites()
 End
 
 Function SetGhostMode:Void(mode:Int)
+	'Update
 	For Local i:=0 Until Sprites.Length
 		Local ghost:GhostSprite=Cast<GhostSprite>(Sprites[i])
 		If (ghost<>Null) 
@@ -134,19 +129,11 @@ Function IncrementPillCounter()
 	If (Clyde.PillCounterActive) Clyde.PillCounter+=1
 End
 
-Function SetSpriteSpeed:Void()
-	For Local i:=0 Until Sprites.Length
-		Sprites[i].SetSpeed()				
-	Next
-	
-End
-
 Function WrapMod:Int(a:Int,n:Int)
 	Local result:Int = (a Mod n)
 	If (result<0) result+=n
 	Return result
 End
-
 
 Class Sprite
 	Field X:Float=0
@@ -160,14 +147,14 @@ Class Sprite
 	Field Enabled:Bool=True
 	Field Dir:Int=Direction.Up
 	Field Speed:Float=1.0
+	Field SpeedMod:Float=0.0
 	Field StartTile:=New Vec2i(0,0)
 	Field HomeTile:=New Vec2i(0,0)
+	Field Timer:FixedTime
 	
 	Method New(asset:string)
-		' Prepare
-		Self.Images=New ImageCollection(asset,16,16)		
-			
-		' Store
+		Self.Images=New ImageCollection(asset,16,16)
+		Self.Timer=New FixedTime()		
 		Sprites.Push(Self)
 	End
 	
@@ -177,22 +164,25 @@ Class Sprite
 		
 	Method Reset() Abstract
 	
-	Method SetSpeed() Abstract
+	Method SetSpeed() Virtual
+		'Update timer
+		Self.Timer.UpdateFrequency=(60*Self.Speed)
+	End
 	
 	Method Update() Virtual
 		'Validate speed
 		Self.SetSpeed()
-
+		
 		'Update position
 		Select Self.Dir
 			Case Direction.Up
-				Self.Y-=Speed
+				Self.Y-=1.0
 			Case Direction.Left
-				Self.X-=Speed
+				Self.X-=1.0
 			Case Direction.Down
-				Self.Y+=Speed
+				Self.Y+=1.0
 			Case Direction.Right
-				Self.X+=Speed
+				Self.X+=1.0
 		End
 	End
 
@@ -200,7 +190,7 @@ Class Sprite
 		Return Self.Images
 	End	
 	
-	Method Render(canvas:Canvas) Virtual
+	Method Render(canvas:Canvas,frame:Int=0) Virtual
 		'Debugger
 		If (window.IsDebug)
 			canvas.Color=Color.Green
@@ -209,7 +199,7 @@ Class Sprite
 		
 		'Draw
 		canvas.Color=Color.White
-		Self.Render(canvas,Self.Dir,New Vec2f(DisplayOffset.X+Int(Self.X)-8,DisplayOffset.Y+Int(Self.Y)-8))
+		Self.Render(canvas,frame,New Vec2f(DisplayOffset.X+Int(Self.X)-8,DisplayOffset.Y+Int(Self.Y)-8))
 	End
 	
 	Method Render(canvas:Canvas,frame:Int,position:Vec2f,flip:Bool=False)
@@ -276,7 +266,7 @@ Class Sprite
 		Return tile	
 	End
 	
-End
+End Class
 
 Class GhostSprite Extends Sprite
 	Field NextDir:Int=Direction.Up
@@ -314,25 +304,27 @@ Class GhostSprite Extends Sprite
 	Method SetSpeed() Override
 		'Validate
 		Select Self.Mode
-			Case GhostMode.Pen
-				Self.Speed=0.75
-			Case GhostMode.LeaveCentrePen,GhostMode.LeavePen,GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
-				Self.Speed=0.75
+			Case GhostMode.Pen,GhostMode.LeaveCentrePen,GhostMode.LeavePen,GhostMode.ReturnCentrePen,GhostMode.ReturnHomePen
+				Self.Speed=0.50
 			Case GhostMode.Frightened
 				Self.Speed=0.50
 			Case GhostMode.ReturnPen
 				Self.Speed=1.00
-				Return
 			Default
 				Self.Speed=0.75	
 		End
 		
 		'In tunnel?
-		If (Self.Tile.X<=0 Or Self.Tile.X>=GridWidth)
-			Self.Speed=0.40
-		Elseif (Grid[1,Self.Tile.X,Self.Tile.Y]=1) 
-			Self.Speed=0.40
+		If (Self.Speed<1.00)
+			If (Self.Tile.X<=0 Or Self.Tile.X>=GridWidth)
+				Self.Speed=0.40
+			Elseif (Grid[1,Self.Tile.X,Self.Tile.Y]=1) 
+				Self.Speed=0.40
+			End
 		End
+		
+		'Set
+		Super.SetSpeed()		
 	End
 	
 	Method SetDirection(dir:Int)
@@ -366,7 +358,10 @@ Class GhostSprite Extends Sprite
 	Method Update() Override
 		'Debugging
 		If (Not window.MoveGhosts) return
-				
+
+		'Process?
+		If (Not Self.Timer.TimeStepNeeded()) Return
+		
 		'Repeat (speed up return to pen)
 		Local updateIndex:Int=1
 		If(Self.Mode=GhostMode.ReturnPen) updateIndex=2
@@ -540,12 +535,20 @@ Class GhostSprite Extends Sprite
 			'Update position
 			Super.Update()
 						
-		End
-		
+		End				
 	End
 	
-	Method Render(canvas:Canvas) Override
-		Super.Render(canvas)
+	Method Render(canvas:Canvas,frame:int) Override
+		'Get frame
+		'After ghost determines next direction we show that direction not current direction
+		frame=Self.Dir
+		Select Self.Mode
+			Case GhostMode.Chase,GhostMode.Scatter
+				'Show next dir
+				If (Self.Dir<>Self.NextDir) frame=Self.NextDir
+		End
+		'Render
+		Super.Render(canvas,frame)
 		
 		'Debugging?
 		If (window.IsDebug)	
@@ -617,7 +620,7 @@ Private
 		Return targetDir
 	End
 			
-End
+End Class
 
 Class BlinkyGhostSprite Extends GhostSprite
 
@@ -636,6 +639,7 @@ Class BlinkyGhostSprite Extends GhostSprite
 		Self.Mode=GhostMode.Scatter
 		Self.PillCounter=0
 		Self.ReleaseOnPill=0
+		Self.SetSpeed()
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -648,7 +652,7 @@ Class BlinkyGhostSprite Extends GhostSprite
 		Return targetTile
 	End
 		
-End
+End Class
 
 Class PinkyGhostSprite Extends GhostSprite
 
@@ -700,7 +704,7 @@ Class PinkyGhostSprite Extends GhostSprite
 		Return targetTile
 	End
 			
-End
+End Class
 
 Class InkyGhostSprite Extends GhostSprite
 
@@ -719,6 +723,7 @@ Class InkyGhostSprite Extends GhostSprite
 		Self.Mode=GhostMode.Pen
 		Self.PillCounter=0
 		Self.ReleaseOnPill=30
+		Self.SetSpeed()
 	End
 	
 	Method GetTargetTile:Vec2i() Override
@@ -758,7 +763,7 @@ Class InkyGhostSprite Extends GhostSprite
 		Return targetTile	
 	End
 	
-End
+End Class
 
 Class ClydeGhostSprite Extends GhostSprite
 
@@ -777,6 +782,7 @@ Class ClydeGhostSprite Extends GhostSprite
 		Self.Mode=GhostMode.Pen
 		Self.PillCounter=0
 		Self.ReleaseOnPill=60
+		Self.SetSpeed()
 	End
 		
 	Method GetTargetTile:Vec2i() Override
@@ -793,7 +799,7 @@ Class ClydeGhostSprite Extends GhostSprite
 		Return targetTile	
 	End
 
-End
+End Class
 
 Class PacmanSprite Extends Sprite
 	Field Score:Int=0
@@ -810,15 +816,19 @@ Class PacmanSprite Extends Sprite
 		Self.HomeTile=Self.StartTile
 		Self.SetPosition(Self.StartTile,0,4)
 		Self.Dir=Direction.Left
+		Self.SetSpeed()
 	End
 			
 	Method Update() Override
+		'Process?
+		If (Not Self.Timer.TimeStepNeeded()) Return
+		
 		'Pause?
 		If (Self.PauseFrame>0)
 			Self.PauseFrame-=1
 			Return
 		End
-		
+	
 		'Prepare
 		Local isCentreTile:Bool = Self.IsCentreTile(Self.X,Self.Y)
 		Local currentTile:Vec2i=Self.Tile
@@ -902,11 +912,19 @@ Class PacmanSprite Extends Sprite
 		
 		'Update position
 		Super.Update()
+			
+	End
+	
+	Method Render(canvas:Canvas,frame:Int) Override
+		Super.Render(canvas,Self.Dir)
 	End
 
 	Method SetSpeed() Override
 		'Update
-		Self.Speed=0.80	
+		Self.Speed=0.80
+		
+		'Set
+		Super.SetSpeed()
 	End
 	
-End
+End Class
