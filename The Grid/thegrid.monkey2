@@ -1,6 +1,7 @@
 
 'Application
 #Import "src/grid"
+#Import "src/color"
 'System
 #Import "<std>"
 #Import "<mojo>"
@@ -10,14 +11,12 @@ Using std..
 
 ' Globals
 Global window:MainWindow
-Global DisplayOffset:=New Vec2i(0,0)
-
 global sz:Int=64
 Global amnt:Float=10
 
 Function Main()
 	New AppInstance()
-	window = New MainWindow("The Grid",640,480,WindowFlags.Fullscreen)	'Fullscreen/Resizable
+	window = New MainWindow("The Grid",1024,768,WindowFlags.Fullscreen)	'Fullscreen/Resizable
 	App.Run()
 End
 
@@ -36,7 +35,7 @@ Public
 		Super.New(title, width, height, flags)
 				
 		'Virtual Resolution
-		'Layout = "letterbox"
+		Layout = "letterbox"
 		MinSize=New Vec2i(640,480)
 		MaxSize=New Vec2i(width,height)
 		ClearColor = Color.Black
@@ -46,7 +45,11 @@ Public
 		Grid=New WonderGrid(width,height)
 		'Grid.Size=GridSize.Small	
 	End Method
-		
+
+	Method OnMeasure:Vec2i() Override
+		Return New Vec2i(640,480)
+	End
+			
 	Method OnRender(canvas:Canvas) Override
 		'Interaction
 		'If (Keyboard.KeyDown(Key.F1)) Grid.Shockwave(Mouse.X,Mouse.Y)
