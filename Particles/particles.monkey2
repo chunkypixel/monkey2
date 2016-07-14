@@ -30,7 +30,7 @@ End
 Class MyWindow Extends Window
 
 Private
-	Field _particles:Particles
+	Field _particles:ParticleManager
 	Field _style:Int=0
 Public
 
@@ -47,16 +47,19 @@ Public
 		particleImage.Handle=New Vec2f(0.5,0.5)
 		
 		'Initialise particles
-		_particles=New Particles()
+		_particles=New ParticleManager()
+		
+		'Randomise
+		SeedRnd(Millisecs())
 
 	End
 
 	Method OnRender( canvas:Canvas ) Override
 		'Features
-		If (Keyboard.KeyHit(Key.P)) _style=(_style + 1) Mod 4
+		If (Keyboard.KeyHit(Key.P)) _style=(_style + 1) Mod 5
 		
 		'Release particles?
-		If(Rnd(0,100)>90) _particles.CreateFireWorks(3,_style)
+		If(Rnd(0,100)>90) _particles.CreateFireWorks(0,_style)
 		
 		'Update
 		_particles.Update()
@@ -89,7 +92,7 @@ Public
 	
 End
 
-Class Particles
+Class ParticleManager
 
 Private
 	Field _points:ParticlePoint[]
@@ -124,18 +127,21 @@ Public
 		Local r:Int=Rnd(0,4)*64
 		Local g:Int=Rnd(0,4)*64
 		Local b:Int=Rnd(0,4)*64
-				
+			
+		'Randomise style?
+		If (style>3) style=Int(Rnd(0,4))
+					
 		'Get location
 		Select position
 			Case 1
-				If (Rnd(0,1))
+				If (Rnd()>=0.5)
 					x=Rnd(100,App.ActiveWindow.Width-100)
 					y=16
-					If (Rnd(0,1)) y=App.ActiveWindow.Height-16
+					If (Rnd()>=0.5) y=App.ActiveWindow.Height-16
 				Else
 					y=Rnd(50,App.ActiveWindow.Height-50)
 					x=16
-					If (Rnd(0,1)) x=App.ActiveWindow.Width-16
+					If (Rnd()>=0.5) x=App.ActiveWindow.Width-16
 				End
 	
 			Case 2
@@ -161,7 +167,8 @@ Public
 	End
 	
 	Method Reset()
-		'Process
+		'Reset
+		_index=0
 		For Local t:Int=0 To NumParticles-1
 			_points[t].x=0
 			_points[t].y=0
@@ -172,10 +179,7 @@ Public
 			_points[t].dx=0
 			_points[t].dy=0
 		Next		
-	
-		'Reset
-		_index=0
-		
+			
 	End
 	
 	Method Render(canvas:Canvas)
@@ -183,9 +187,7 @@ Public
 			
 		'Prepare
 		canvas.BlendMode=BlendMode.Additive
-		canvas.Alpha=1.0
 		canvas.TextureFilteringEnabled=True
-		canvas.LineWidth=2.0
 		
 		'Process
 		For Local t:int=0 To NumParticles-1
@@ -199,6 +201,8 @@ Public
 						canvas.Color=GetColor(r,g,b)
 						
 						'Draw
+						canvas.LineWidth=2.0
+						canvas.Alpha=1.0
 						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
 									
 					Case 1						
@@ -210,7 +214,7 @@ Public
 						
 						'Draw
 						canvas.LineWidth=3.0
-						canvas.Alpha=0.9
+						canvas.Alpha=0.8
 						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
 									
 					Case 2
@@ -221,14 +225,12 @@ Public
 						canvas.Color=GetColor(r,g,b)
 						
 						'Draw
-						canvas.Alpha=1.0 '.9
+						canvas.LineWidth=2.0
+						canvas.Alpha=1.0
 						canvas.DrawImage(particleImage,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy,0,0.5,0.5)		
 										
 					Case 3 
 						'BEST!
-						Local px:Float,py:Float
-						Local r:Float,g:Float,b:Float
-						
 						'Get color
 						r=Min(_points[t].r*1.25,255.0)
 						g=Min(_points[t].g*1.25,255.0)
@@ -236,16 +238,12 @@ Public
 						canvas.Color=GetColor(r,g,b)
 						
 						'Draw (line)
-						px=_points[t].x
-						py=_points[t].y
+						canvas.LineWidth=2.0
 						canvas.Alpha=0.8
-						canvas.DrawLine(px,py,px+_points[t].dx,py+_points[t].dy)				
+						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)				
 						'Draw (image)
-						Local rot:Float=ATan(_points[t].dy/_points[t].dx)
-						px=_points[t].x
-						py=_points[t].y					
 						canvas.Alpha=0.25
-						canvas.DrawImage(particleImage,px+_points[t].dx*1.0,py+_points[t].dy*1.0)						
+						canvas.DrawImage(particleImage,_points[t].x+_points[t].dx*1.0,_points[t].y+_points[t].dy*1.0)						
 				End
 			End
 			
@@ -346,41 +344,38 @@ Struct ParticlePoint
 	Field style:Int=0
 	
 	Method Update()
-		x=x+dx
-		y=y+dy
+		x+=dx
+		y+=dy
 		If (x<=dx)
 			dx=Abs(dx)
-			x=x+dx*2
+			x+=dx*2
 		End
 		If(x>App.ActiveWindow.Width-1-dx)
 			dx=-Abs(dx)
-			x=x+dx*2
+			x+=dx*2
 		End
 		If (y<=dy)
 			dy=Abs(dy)
-			y=y+dy*2
+			y+=dy*2
 		End
 		If (y>App.ActiveWindow.Height-1-dy)
 			dy=-Abs(dy)
-			y=y+dy*2
+			y+=dy*2
 		End
-		dx=dx*ParticleDecay
-		dy=dy*ParticleDecay
+		dx*=ParticleDecay
+		dy*=ParticleDecay
 		
 		active-=1
 		If (active<20)
 			If (active<10)
-				r*=0.8
-				g*=0.8
-				b*=0.8
+				r=Max(r*0.8,0.0)
+				g=Max(g*0.8,0.0)
+				b=Max(b*0.8,0.0)
 			Else
-				r*=0.97
-				g*=0.97
-				b*=0.97
+				r=Max(r*0.97,0.0)
+				g=Max(g*0.97,0.0)
+				b=Max(b*0.97,0.0)
 			End
-			If (r<0) r=0
-			If (g<0) g=0
-			If (b<0) b=0
 		Elseif (active>200)
 			active=200
 		End

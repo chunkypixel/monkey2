@@ -3,7 +3,7 @@ Class PlayState Extends State
 
 Private
 	Field _grid:Grid
-	Field _particles:Particles
+	Field _particles:ParticleManager
 	Field _cnt:Int=0
 	Field particleStyle:Int=3
 public
@@ -11,7 +11,7 @@ public
 	Method New()
 		'Initialise 
 		_grid=New Grid(GAME.Width,GAME.Height)
-		_particles=New Particles()
+		_particles=New ParticleManager()
 	End
 
 	Method Enter:Void() Override
@@ -28,7 +28,7 @@ public
 		
 		'Keys
 		If (Keyboard.KeyHit(Key.G)) _grid.Style=(_grid.Style + 1) Mod 11
-		If (Keyboard.KeyHit(Key.P)) particleStyle=(particleStyle + 1) Mod 4
+		If (Keyboard.KeyHit(Key.P)) particleStyle=(particleStyle + 1) Mod 5
 		
 		'Update
 		_grid.Update()
@@ -50,7 +50,7 @@ public
 		'If ((_cnt Mod 60)=0) _grid.Pull(Rnd(0,GAME.Width),Rnd(0,GAME.Height),8,24)
 		
 		'Release particles?
-		If(Rnd(0,100)>94) _particles.CreateFireWorks(3,particleStyle)
+		If(Rnd(0,100)>94) _particles.CreateFireWorks(0,particleStyle)
 		
 	End
 
