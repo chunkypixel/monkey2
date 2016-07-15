@@ -49,7 +49,7 @@ Public
 		Return GetColor(Self.Red,Self.Green,Self.Blue)
 	End
 	
-End
+End Class
 
 Function GetColor:Color(red:Float,green:Float,blue:Float)
 	Return New Color(red/255,green/255,blue/255)

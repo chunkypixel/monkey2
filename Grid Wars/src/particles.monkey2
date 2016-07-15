@@ -12,7 +12,10 @@ Public
 
 	Method New()
 		'Initialise
-		_points=New ParticlePoint[NumParticles]				
+		_points=New ParticlePoint[NumParticles]	
+		
+		'Reset
+		Self.Reset()			
 	End
 	
 	Method CreateParticles(x:Int,y:Int,style:Int=2,type:Int=0,particles:Int=32)

@@ -2,7 +2,7 @@
 Class PlayState Extends State
 
 Private
-	Field _grid:Grid
+	Field _grid:GridManager
 	Field _particles:ParticleManager
 	Field _cnt:Int=0
 	Field particleStyle:Int=3
@@ -10,7 +10,7 @@ public
 
 	Method New()
 		'Initialise 
-		_grid=New Grid(GAME.Width,GAME.Height)
+		_grid=New GridManager(GAME.Width,GAME.Height)
 		_particles=New ParticleManager()
 	End
 
