@@ -9,7 +9,8 @@ Private
 	Field _points:ParticlePoint[]
 	Field _index:Int=0
 Public
-
+	Field Alpha:Float=1.0
+	
 	Method New()
 		'Initialise
 		_points=New ParticlePoint[NumParticles]	
@@ -100,8 +101,12 @@ Public
 		Local r:Float,g:Float,b:Float
 			
 		'Prepare
-		canvas.BlendMode=BlendMode.Additive
+		Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
 		canvas.TextureFilteringEnabled=True
+		canvas.Alpha=Self.Alpha
+		canvas.BlendMode=BlendMode.Additive
+		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.Color=Color.White
 		
 		'Process
 		For Local t:int=0 To NumParticles-1
@@ -116,7 +121,7 @@ Public
 						
 						'Draw
 						canvas.LineWidth=2.0
-						canvas.Alpha=1.0
+						canvas.Alpha=Self.Alpha
 						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
 									
 					Case 1						
@@ -128,7 +133,7 @@ Public
 						
 						'Draw
 						canvas.LineWidth=3.0
-						canvas.Alpha=0.8
+						canvas.Alpha=Self.Alpha-0.2	'0.8
 						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
 									
 					Case 2
@@ -140,7 +145,7 @@ Public
 						
 						'Draw
 						canvas.LineWidth=2.0
-						canvas.Alpha=1.0
+						canvas.Alpha=Self.Alpha
 						canvas.DrawImage(particleImage,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy,0,0.5,0.5)		
 										
 					Case 3 
@@ -153,7 +158,7 @@ Public
 						
 						'Draw (line)
 						canvas.LineWidth=2.0
-						canvas.Alpha=0.8
+						canvas.Alpha=Self.Alpha-0.2	'0.8
 						canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)				
 						'Draw (image)
 						canvas.Alpha=0.25
@@ -164,9 +169,11 @@ Public
 		Next
 		
 		'Reset
-		canvas.BlendMode=BlendMode.Alpha
+		canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
 		canvas.Alpha=1.0
+		canvas.BlendMode=BlendMode.Alpha
 		canvas.LineWidth=1.0
+		canvas.Color=Color.White
 			
 	End
 	

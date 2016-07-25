@@ -23,12 +23,13 @@ Private
 	Field _totalPointsHeight:Int=0
 	Field _colors:ColorCycle
 Public
-	Field Opacity:Float=0.75
+	Field Alpha:Float=0.75
 	Field Hilight:Int=4
-	Field Style:Int=5
+	Field Style:Int=8
+	Field TotalStyles:Int=9
 	Field CycleColors:Bool=True
 	
-	Method New(width:Int=1024,height:Int=768,style:Int=5)
+	Method New(width:Int=1024,height:Int=768,style:Int=8)
 		'Images
 		particleImage=Image.Load("asset::particle.png",TextureFlags.Filter)
 		particleImage.Handle=New Vec2f(0.5,0.5)
@@ -38,6 +39,12 @@ Public
 		_height=height
 		Self.Style=style
 		
+		'Size of points
+		If (width=640) 
+			'_pointWidth=8
+			'_pointHeight=8
+		End
+		
 		'Initialise
 		_totalPointsWidth=(_width/_pointWidth)
 		_totalPointsHeight=(_height/_pointHeight)
@@ -45,8 +52,7 @@ Public
 		_colors=New ColorCycle()
 		
 		'Reset	
-		Self.Reset()
-			
+		Self.Reset()			
 	End
 
 	Method Reset()
@@ -97,14 +103,17 @@ Public
 
 	Method Render(canvas:Canvas)
 		'Canvas
-		canvas.Alpha=Abs(Self.Opacity)
-		canvas.BlendMode=BlendMode.Additive	'LIGHTBLEND
+		Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
+		canvas.TextureFilteringEnabled=True
+		canvas.Alpha=Self.Alpha
+		canvas.BlendMode=BlendMode.Additive	
 		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.Color=Color.White
 									
 		'Color
 		If (Not Self.CycleColors) canvas.Color=GetColor(32,80,200)
 		If (Self.CycleColors) canvas.Color=_colors.Color()
-
+		
 		'Render style
 		Select Self.Style
 			Case 0				
@@ -132,10 +141,11 @@ Public
 		End
 		
 		'Reset
+		canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
 		canvas.Alpha=1.0
 		canvas.BlendMode=BlendMode.Alpha
-		canvas.Color=Color.White
 		canvas.LineWidth=1.0
+		canvas.Color=Color.White
 		
 	End
 		
@@ -312,7 +322,7 @@ Private
 				
 		For Local a:int=1 To _totalPointsWidth-1
 			For Local b:int=1 To _totalPointsHeight-1
-				Local alpha:Float=Self.Opacity
+				Local alpha:Float=Self.Alpha
 				If ((b+boldHeight) Mod Self.Hilight=0) alpha+=0.25
 				If ((a+boldWidth) Mod Self.Hilight=0) alpha+=0.25
 				canvas.Alpha=alpha
@@ -327,7 +337,7 @@ Private
 	    Local boldWidth:Int=Self.Hilight-(0 Mod Self.Hilight)
 	    Local boldHeight:Int=Self.Hilight-(0 Mod Self.Hilight)
 		
-		canvas.Alpha=0.9
+		canvas.Alpha=Self.Alpha	'0.9
 		For Local a:Int=boldWidth To _totalPointsWidth-Self.Hilight Step Self.Hilight
 			For Local b:Int=boldHeight-Self.Hilight To _totalPointsHeight-Self.Hilight Step Self.Hilight
 				canvas.DrawLine(_points[a,b].x,_points[a,b].y,_points[a,b+Self.Hilight].x,_points[a,b+Self.Hilight].y)
@@ -366,7 +376,7 @@ Private
                	colB=Sin(delX)
 
                 canvas.Color=GetColor(20+235*colB,20+100*colB,180-140*colB)
-                canvas.Alpha=((1-colB)*0.7+0.3)            
+                canvas.Alpha=((Self.Alpha-colB)*0.7+0.3)            
 				canvas.DrawPoly(xy)			
 			Next
 		Next
@@ -412,7 +422,7 @@ Private
                 xy[5]=_points[a+1,b+1].y
                 xy[6]=_points[a,b+1].x
                 xy[7]=_points[a,b+1].y
-                canvas.Alpha=(Self.Opacity-0.25*(Sin(_colors.Green+i)+Cos(j)))         
+                canvas.Alpha=(Self.Alpha-0.25*(Sin(_colors.Green+i)+Cos(j)))         
 				canvas.DrawPoly(xy)	
 			Next
 		Next
@@ -443,13 +453,13 @@ Private
                 If (delX<0) 
                 	colB=0.0
                 Elseif(delX>90)
-                	colB=1.0
+                	colB=Self.Alpha	'1.0
                 Else
                 	colB=Sin(delX)
                 End
 
                 canvas.Color=GetColor(20+235*colB,20+100*colB,180-140*colB)
-                canvas.Alpha=((1-colB)*0.3+0.7)            
+                canvas.Alpha=((Self.Alpha-colB)*0.3+0.7)            
                	'canvas.LineWidth=(2.0+colB*2)
                 canvas.DrawLine(xy[0],xy[1],xy[2],xy[3])
                 canvas.DrawLine(xy[2],xy[3],xy[4],xy[5])
@@ -484,7 +494,7 @@ Private
                 If (delX<0) 
                 	colB=0.0
                 Elseif(delX>90)
-                	colB=1.0
+                	colB=Self.Alpha	'1.0
                 Else
                 	colB=Sin(delX)
                 End
@@ -535,7 +545,7 @@ Private
 				If (delX<0)
 					colB=0.0
 				Elseif (delX>90)
-					colB=1.0
+					colB=Self.Alpha	'1.0
 				Else
 					colB=Sin(delX)
 				End If
@@ -543,7 +553,7 @@ Private
 
 				canvas.Color=GetColor(20+235*colB,20+100*colB,180-140*colB)
 			    canvas.LineWidth=(2.0+colB*1.5)'2?
-				Local alpha:Float=(1-colB)*0.0+0.5
+				Local alpha:Float=(Self.Alpha-colB)*0.0+0.5
 				If (a<_totalPointsWidth-1)
 					If ((x Mod 4)>0)
 						canvas.Alpha=alpha

@@ -10,7 +10,7 @@ public
 
 	Method New()
 		'Initialise 
-		_grid=New GridManager(GAME.Width,GAME.Height)
+		_grid=New GridManager(GAME.Width,GAME.Height,7)
 		_particles=New ParticleManager()
 	End
 
