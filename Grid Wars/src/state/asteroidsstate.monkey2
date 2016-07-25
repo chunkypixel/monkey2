@@ -18,7 +18,7 @@ Public
 		'Create/reset stuff
 		CreatePlayer()
 		'Rocks
-		maxRocks=2
+		maxRocks=5
 		rockSplit=2
 		CreateRocks()
 		

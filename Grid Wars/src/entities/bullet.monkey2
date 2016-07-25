@@ -30,8 +30,6 @@ Public
 		_life-=1
 		If (_life=0)
 			RemoveEntity(Self)
-			Self.State.Shockwave(Self.X,Self.Y)
-			Self.State.Fireworks(Self.X,Self.Y)
 			Return
 		End
 
@@ -41,7 +39,43 @@ Public
 		Self.Y+=-Sin(radian)*_speed
 
 		'collision with objects?
+		Local group:=GetEntityGroup("rocks")
+		For Local entity:=Eachin group.Entities
+			Local rock:=Cast<RockEntity>(entity)
+			If (rock.IsColliding(Self.X,Self.Y)) 
+				'Remove bullet
+				RemoveEntity(Self)
+				
+				'Explode
+				Self.State.Shockwave(rock.X,rock.Y)
+				Self.State.Fireworks(rock.X,rock.Y)
+			
+				For Local i:= 1 To 2
+					Local angle:Int=rock.Angle
+					If (i=1) angle-=90
+					If (i=2) angle+=90
+					Local newrock:=New RockEntity(angle)
 
+					newrock.SetSize(rock.Size+1)
+					newrock.ResetPosition(rock.X,rock.Y)
+
+					AddEntity(newrock, LAYER_ROCKS)
+					AddEntityToGroup(newrock, "rocks")
+					'state.rockCount+=1
+				Next
+
+				'remove rock we've hit
+				RemoveEntity(rock)
+				'state.rockCount-=1
+
+				' avoid scanning more rock collisions
+				' for this bullet
+				Return
+
+			End
+		
+		Next
+				
 	End Method
 	
 End Class

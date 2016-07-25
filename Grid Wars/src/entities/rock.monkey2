@@ -4,23 +4,25 @@ Class RockEntity Extends ImageEntity
 Private
 	Field _rotationSpeed:Float
 	Field _speed:Float
-	Field _directionAngle:Float
 	Field _type:Int=0'Rnd(0,4)
+	Field _poly:Poly
 Public
-
-	Method New(directionAngle:Float)
+	Field Angle:Float
+	Field Size:Int=0
+	
+	Method New(angle:Float)
 		Super.New(PlayerImage)
 		
 		'Validate
-		If (directionAngle<0) directionAngle+=360
-		If (directionAngle>360) directionAngle-=360
-		_directionAngle=directionAngle
+		If (angle<0) angle+=360
+		If (angle>360) angle-=360
+		Self.Angle=angle
 		Self.Rotation=Rnd(360)
 		Self.Radius=4
 		
-		Self.Scale=New Vec2f(0.5,0.5)
-		Self.BlendMode=BlendMode.Additive
-		Self.Color=Color.White
+		'Self.Scale=New Vec2f(0.5,0.5)
+		'Self.BlendMode=BlendMode.Additive
+		'Self.Color=Color.White
 	End
 
 	Method Update:Void() Override
@@ -31,85 +33,116 @@ Public
 		If (Self.Y>GAME.Height+5) Self.ResetPosition(Self.X,-5)
 		
 		'Spin
+		'DebugStop()
 		Self.Rotation+=_rotationSpeed
+		_poly.Rotation(Self.Rotation)
+		'Print "Rotation:"+Self.Rotation
 		
 		'Thrust
-		Local radian:= DegreesToRadians(_directionAngle)
+		Local radian:= DegreesToRadians(Self.Angle)
 		Self.X+=Cos(radian)*_speed
 		Self.Y+=-Sin(radian)*_speed
 
 	End Method
 
 	Method Render:Void(canvas:Canvas) Override
-		
-		'Canvas
-		Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
-		canvas.TextureFilteringEnabled=True
-		'canvas.Alpha=Self.Alpha
-		canvas.BlendMode=BlendMode.Additive	
-		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
-		canvas.Color=Color.White
-		
-		'Create
-		Select _type
-			Case 0
-	    		Local xy:=New Float[24]
-				xy[0]=Self.X+-10
-				xy[1]=Self.Y+0
-				xy[2]=Self.X+-19
-				xy[3]=Self.Y+-5
-				xy[4]=Self.X+-5
-				xy[5]=Self.Y+-19
-				xy[6]=Self.X+10
-				xy[7]=Self.Y+-20
-				xy[8]=Self.X+21
-				xy[9]=Self.Y+-5
-				xy[10]=Self.X+21
-				xy[11]=Self.Y+6
-				xy[12]=Self.X+12
-				xy[13]=Self.Y+20
-				xy[14]=Self.X+-1
-				xy[15]=Self.Y+20
-				xy[16]=Self.X+-1
-				xy[17]=Self.Y+20
-				xy[18]=Self.X+-9
-				xy[19]=Self.Y+20
-				xy[20]=Self.X+-20
-				xy[21]=Self.Y+6
-				xy[22]=Self.X+-10
-				xy[23]=Self.Y+0
-				'Draw
-				'canvas.Rotate(Self.Rotation)
-				canvas.DrawPoly(xy)
-				'canvas.Rotate(0)
-		End Select
-		
-		'Reset
-		canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
-		canvas.Alpha=1.0
-		canvas.BlendMode=BlendMode.Alpha
-		canvas.LineWidth=1.0
-		canvas.Color=Color.White
-		
+		_poly.Render(canvas,Self.X,Self.Y)
 	End
 
-
 	Method SetSize:Void(size:Int)
-		'Self.Frame = size
+		'Create
+		_poly=New Poly()
+		_rotationSpeed=Rnd(-0.05,0.05)		
+		
+		'Set
 		Select size
 			Case SIZE_BIG
-				_speed=Rnd(0.1,0.2)*2
+				_speed=1	'Rnd(1,2)*2
 				Self.Radius=14
+				
+				'Create
+				_poly.Add(-10,0)
+				_poly.Add(-19,-5)
+				_poly.Add(-5,-19)
+				_poly.Add(10,-20)
+				_poly.Add(21,-5)
+				_poly.Add(21,6)
+				_poly.Add(12,20)
+				_poly.Add(-1,20)
+				_poly.Add(-1,6)
+				_poly.Add(-9,20)
+				_poly.Add(-20,6)
+				_poly.Add(-10,0)
+				_poly.Resize(1.25,1.25)
+				
 			Case SIZE_MEDIUM
-				_speed=Rnd(0.3,0.4)*4
-				_rotationSpeed=Rnd(-1,1)
+				_speed=2	'Rnd(0.3,0.4)*4
 				Self.Radius=8
+				
+				'Create
+				_poly.Add(-20,-8)
+				_poly.Add(-5,-8)
+				_poly.Add(-11,-20)
+				_poly.Add(6,-20)
+				_poly.Add(21,-8)
+				_poly.Add(21,-4)
+				_poly.Add(6,0)
+				_poly.Add(21,11)
+				_poly.Add(10,21)
+				_poly.Add(6,15)
+				_poly.Add(-10,20)
+				_poly.Add(-20,8)
+				_poly.Add(-20,-8)				
+				'_poly.Resize(1.25,1.25)
+
 			Case SIZE_SMALL
-				_speed=Rnd(0.5,0.7)*6
-				_rotationSpeed=Rnd(-2,2)
+				_speed=3	'Rnd(0.5,0.7)*6
 				Self.Radius=4
+				
+				'Create
+				_poly.Add(-15,0)
+				_poly.Add(-20,-11)
+				_poly.Add(-9,-20)
+				_poly.Add(1,-14)
+				_poly.Add(12,-20)
+				_poly.Add(21,-11)
+				_poly.Add(11,-5)
+				_poly.Add(21,6)
+				_poly.Add(12,20)
+				_poly.Add(-4,15)
+				_poly.Add(-9,20)
+				_poly.Add(-20,11)
+				_poly.Add(-14,0)				
+				'_poly.Resize(0.5,0.5)
+				
+			Default
+				_speed=4	'Rnd(0.5,0.7)*6
+				Self.Radius=4
+				
+				'Create
+				_poly.Add(-20,-11)
+				_poly.Add(-8,-20)
+				_poly.Add(2,-11)
+				_poly.Add(12,-20)
+				_poly.Add(20,-9)
+				_poly.Add(20,-6)
+				_poly.Add(16,0)
+				_poly.Add(20,12)
+				_poly.Add(8,20)
+				_poly.Add(-8,20)
+				_poly.Add(-20,11)				
+				_poly.Add(-20,-11)				
+				'_poly.Resize(0.25,0.25)
+			
 		End Select
+
+		'Update
+		_poly.Rotation(Self.Rotation)
+		Self.Size=size
 		
 	End Method
 		
+	Method IsColliding:Bool(x:Float,y:Float)
+		Return _poly.IsColliding(Self.X,Self.Y,x,y)
+	End
 End Class

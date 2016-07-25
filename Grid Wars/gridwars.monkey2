@@ -2,6 +2,7 @@
 #Import "src/grid"
 #Import "src/particles"
 #Import "src/color"
+#Import "src/vector"
 #Import "src/assets"
 #Import "src/state/gamestate"
 #Import "src/state/titlestate"
@@ -30,7 +31,7 @@ Const SIZE_SMALL:Int = 4
 
 Function Main()
 	New AppInstance
-	New GridWarsGame(640,480)
+	New GridWarsGame(800,600)
 	App.Run()
 End Function
 
@@ -41,7 +42,7 @@ Class GridWarsGame Extends Game2d
 
 		'Initialise display
 		Layout="letterbox"
-		Self.GameResolution=New Vec2i(width,height)
+		Self.GameResolution=New Vec2i(width,height*0.80)
 		Self.ClearColor=New Color(0,0,0)
 		Self.TextureFilterEnabled=False
 		Style.BackgroundColor=New Color(0,0,0)
