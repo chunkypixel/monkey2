@@ -62,8 +62,7 @@ Private
 
 	Method CreateRocks:Void()
 		For Local count:=0 Until maxRocks
-			Local rock:=New RockEntity(Rnd(360))
-			rock.SetSize(SIZE_BIG)
+			Local rock:=New RockEntity(SIZE_BIG,Rnd(360))
 			rock.ResetPosition(Rnd(10,GAME.Width-10),Rnd(10,GAME.Height-10))
 			AddEntity(rock,LAYER_ROCKS)
 			AddEntityToGroup(rock, "rocks")

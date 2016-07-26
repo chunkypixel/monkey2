@@ -75,5 +75,8 @@ public
 	Method Fireworks(x:Int,y:Int,style:Int=3,type:Int=0)
 		_particles.CreateParticles(x,y,style,type,64)
 	End Method
-			
+	Method Trail(x:Int,y:Int,direction:Float)
+		_particles.CreateTrail(x,y,direction)
+	End Method
+	
 End Class

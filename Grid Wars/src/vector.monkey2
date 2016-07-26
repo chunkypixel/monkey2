@@ -79,10 +79,10 @@ Public
 			Local yJ:Float=_points[j].y+y1
 			
 			'Validate
+			'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 			If (((yI>y2)<>(yJ>y2)) And (x2<(xJ-xI)*(y2-yI)/(yJ-yI)+xI)) 
 				colliding=Not colliding
 			End
-
 			'If ((((yI<=y2) And (y2<yJ)) Or ((yJ<=y2) And (y2<yI))) And (x2<(xJ-xI)*(y2-yI)/(yJ-yI)+xI)) 
 			'	colliding=Not colliding
 			'End

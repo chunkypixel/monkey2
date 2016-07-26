@@ -19,7 +19,7 @@ Public
 		Self.Reset()			
 	End
 	
-	Method CreateParticles(x:Int,y:Int,style:Int=2,type:Int=0,particles:Int=32)
+	Method CreateParticles(x:Int,y:Int,style:Int=3,type:Int=0,particles:Int=32)
 		'Prepare
 		Local r:Int=Rnd(0,4)*64
 		Local g:Int=Rnd(0,4)*64
@@ -29,14 +29,34 @@ Public
 		Self.CreateParticles(x,y,style,type,r,g,b,particles)	
 	End
 
-	Method CreateParticles(x:Int,y:Int,style:Int=2,type:Int=0,r:Int,g:Int,b:Int,particles:Int=32)
+	Method CreateParticles(x:Int,y:Int,style:Int=3,type:Int=0,r:Int,g:Int,b:Int,particles:Int=32)
 		'Create
 		For Local t:Int=0 Until particles
 			Self.Create(x,y,style,type,r,g,b)
 		Next	
 	End
 	
-	Method CreateFireWorks(position:Int,style:Int=2,type:Int=0)
+	Method CreateTrail(x:Int,y:Int,dir:Float,style:Int=3)
+		'Prepare
+		Local r:Int=255-Rnd(0,32)
+		Local g:Int=64+Rnd(0,128)
+		Local b:Int=0
+
+		'Validate
+		If (dir<0) dir+=360
+		If (dir>360) dir-=360
+		
+		'Offset 
+		Local radian:=DegreesToRadians(dir)
+		x+=Cos(radian)*6
+		y+=-Sin(radian)*6
+		
+		'Create
+		Self.Create(x,y,style,8,r,g,b,0.0,1,dir)		
+	End
+	
+	
+	Method CreateFireWorks(position:Int,style:Int=3,type:Int=0)
 		'Prepare
 		Local x:Int,y:Int
 		Local r:Int=Rnd(0,4)*64
@@ -173,14 +193,13 @@ Public
 		canvas.Alpha=1.0
 		canvas.BlendMode=BlendMode.Alpha
 		canvas.LineWidth=1.0
-		canvas.Color=Color.White
-			
+		canvas.Color=Color.White	
 	End
 	
 Private
-	Method Create(x:Float,y:Float,style:Int,type:Int,r:Int,g:Int,b:Int,rot:Float=0.0,size:Int=1)
+	Method Create(x:Float,y:Float,style:Int,type:Int,r:Int,g:Int,b:Int,rot:Float=0.0,size:Int=1,dir:Float=0.0)
 		'Prepare
-		Local dir:Float
+		'Local dir:Float
 		Local mag:Float
 				
 		'Set particle
@@ -238,6 +257,14 @@ Private
 				mag=Rnd(1,14)
 				_points[_index].dx=Cos(dir)*mag
 				_points[_index].dy=Sin(dir)*mag
+			Case 8
+				'trail
+				dir+=Rnd(-1,1)
+				_points[_index].dx=Cos(dir)
+				_points[_index].dy=Sin(dir)
+				'Reduce
+				_points[_index].active/=2
+			
 		End
 		
 		'Finalise

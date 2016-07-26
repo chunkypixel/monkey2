@@ -34,15 +34,16 @@ Public
 		End
 
 		'Thrust
-		Local radian:=DegreesToRadians(Rotation)
+		Local radian:=DegreesToRadians(Self.Rotation)
 		Self.X+=Cos(radian)*_speed
 		Self.Y+=-Sin(radian)*_speed
 
 		'collision with objects?
 		Local group:=GetEntityGroup("rocks")
 		For Local entity:=Eachin group.Entities
+			'Validate
 			Local rock:=Cast<RockEntity>(entity)
-			If (rock.IsColliding(Self.X,Self.Y)) 
+			If (rock.Collision And rock.CheckCollision(Self)) 
 				'Remove bullet
 				RemoveEntity(Self)
 				
@@ -50,26 +51,27 @@ Public
 				Self.State.Shockwave(rock.X,rock.Y)
 				Self.State.Fireworks(rock.X,rock.Y)
 			
+				'Create new rocks
 				For Local i:= 1 To 2
+					'Set angle
 					Local angle:Int=rock.Angle
 					If (i=1) angle-=90
 					If (i=2) angle+=90
-					Local newrock:=New RockEntity(angle)
-
-					newrock.SetSize(rock.Size+1)
+					
+					'Create
+					Local newrock:=New RockEntity(rock.Size+1,angle)
 					newrock.ResetPosition(rock.X,rock.Y)
-
-					AddEntity(newrock, LAYER_ROCKS)
+					AddEntity(newrock,LAYER_ROCKS)
 					AddEntityToGroup(newrock, "rocks")
 					'state.rockCount+=1
 				Next
 
-				'remove rock we've hit
+				'Remove rock
 				RemoveEntity(rock)
 				'state.rockCount-=1
 
-				' avoid scanning more rock collisions
-				' for this bullet
+				'avoid scanning more rock collisions
+				'for this bullet
 				Return
 
 			End
