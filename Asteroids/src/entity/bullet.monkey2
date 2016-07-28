@@ -8,6 +8,7 @@ Public
 	Field State:GameState
 
 	Method New(position:Vec2f,direction:Float)
+		Self.Initialise()
 		'Offset (from tip)
 		Local radian:=DegreesToRadians(direction)
 		position.X+=Cos(radian)*8
@@ -74,27 +75,25 @@ Public
 	End Method
 	
 	Method Render:Void(canvas:Canvas) Override
-		'Prepare
-		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
-		'canvas.TextureFilteringEnabled=True
-		'canvas.BlendMode=BlendMode.Additive
-		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		'Base
+		Super.Render(canvas)
 		
-		'Get image
+		'Draw (glow)
 		Local image:=GetImage("Particle")
-		
-		'Draw (line)
-		canvas.Color=Self.PointColor
-		canvas.DrawPoint(Self.X,Self.Y)				
-		'Draw (image)
 		canvas.Alpha=0.25
 		If (image<>Null) canvas.DrawImage(image,Self.X,Self.Y)						
 		
 		'Reset
 		canvas.Alpha=1.0
-		canvas.Color=Color.White		
-		'canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
-		'canvas.LineWidth=1.0
+	End Method
+
+Private
+	Method Initialise()
+		'Create
+		Self.AddPoint(0,0)
+		Self.AddPoint(1,1)
+		'Size
+		'Self.Scale=New Vec2f(1.0,1.0)
 	End Method
 	
 End Class

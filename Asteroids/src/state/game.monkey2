@@ -9,7 +9,7 @@ Class GameState Extends State
 Private
 	Field _particles:ParticleManager
 	Field _camera:CameraEntity
-	Field _maxRocks:Int=4
+	Field _maxRocks:Int=2
 Public
 	Field Player:PlayerEntity
 	Field RockCount:Int

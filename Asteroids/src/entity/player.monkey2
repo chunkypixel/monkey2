@@ -6,7 +6,7 @@ Private
 	Field _thrust:Float=0.07
 	Field _immune:Bool=False
 	Field _immunePause:Int
-	Field _immuneFlashPause:Int=10
+	Field _immuneFlashPause:Int=7
 	Field _dead:Bool=False
 	Field _deadPause:Int
 Public
@@ -17,7 +17,6 @@ Public
 	Method New()
 		'Create
 		Self.Initialise()
-		Self.Scale=New Vec2f(0.75,0.75)
 	End
 	
 	Method Reset:Void() Override
@@ -27,7 +26,7 @@ Public
 		Self.ResetPosition(GAME.GameResolution.X/2,GAME.GameResolution.Y/2)		
 		'General
 		_immune=True
-		_immunePause=100
+		_immunePause=98
 		'Base
 		Super.Reset()
 	End
@@ -118,7 +117,7 @@ Public
 				If (rock.CheckCollision(Self)) 
 					'Explode (and shake)
 					Self.State.CreateExplosion(Self.Position)
-					Self.State.Shake(5)
+					Self.State.Shake(10)
 					'Set
 					_dead=true
 					_deadPause=100
@@ -140,12 +139,14 @@ Public
 	
 Private
 	Method Initialise()
-		'Create ship
+		'Create
 		Self.AddPoint(-8,-8)
 		Self.AddPoint(12,0)
 		Self.AddPoint(-8,8)
 		Self.AddPoint(-5,0)
 		Self.AddPoint(-8,-8)
+		'Size
+		Self.Scale=New Vec2f(0.75,0.75)
 	End Method
 	
 End Class
