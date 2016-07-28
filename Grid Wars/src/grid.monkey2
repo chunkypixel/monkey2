@@ -17,8 +17,8 @@ Private
 	Field _points:GridPoint[,]
 	Field _width:Int=1024
 	Field _height:Int=768
-	Field _pointWidth:Int=16
-	Field _pointHeight:Int=16
+	Field _pointWidth:Int=12
+	Field _pointHeight:Int=12
 	Field _totalPointsWidth:Int=0
 	Field _totalPointsHeight:Int=0
 	Field _colors:ColorCycle

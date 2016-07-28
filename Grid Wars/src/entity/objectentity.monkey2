@@ -2,25 +2,17 @@
 Class ObjectEntity Extends Entity
 Private
 	Field _scale:Vec2f
-	Field _rotation:Float
 	Field _color:Color
 	Field _blend:BlendMode
-	Field _angle:Float
+	Field _rotation:Float
+	Field _direction:Float
 	Field _visible:Bool
-	Field _collision:Bool
+	Field _enabled:Bool
 Public
+	Field State:GameState
 
 	Method New()
 		Self.Initialize()
-	End
-
-	#Rem monkeydoc Returns or sets the entity collision flag.
-	When set to False, the entity does not participate in collision checks.
-	#End
-	Property Collision:Bool()
-		Return _collision
-	Setter( value:Bool )
-		_collision = value
 	End
 
 	#Rem monkeydoc Returns or sets the entity visibility flag.
@@ -31,7 +23,16 @@ Public
 	Setter( value:Bool )
 		_visible = value
 	End
-	
+
+	#Rem monkeydoc Returns or sets the entity enabled flag.
+	When set to False, the entity is not updated or rendered.
+	#End
+	Property Enabled:Bool()
+		Return _visible
+	Setter( value:Bool )
+		_visible = value
+	End
+		
 	#Rem monkeydoc Returns or sets the entity image scale.
 	#End
 	Property Scale:Vec2f()
@@ -63,12 +64,12 @@ Public
 		_blend = value
 	End
 
-	#Rem monkeydoc Returns or sets the entity angle/direction (in degrees)
+	#Rem monkeydoc Returns or sets the entity direction (in degrees)
 	#End	
-	Property Angle:Float()
-		Return _angle
+	Property Direction:Float()
+		Return _direction
 	Setter( value:float )
-		_angle = value
+		_direction = value
 	End
 		
 Private
@@ -76,11 +77,12 @@ Private
 	#End
 	Method Initialize:Void()
 		_scale=New Vec2f(1.0,1.0)
-		_rotation=0.0
 		_color=Color.White
-		_blend=BlendMode.Alpha
+		_blend=BlendMode.Additive
+		_rotation=0.0
+		_direction=0.0
 		_visible=True
-		_collision=True
+		_enabled=True
 	End Method	
 	
 End Class

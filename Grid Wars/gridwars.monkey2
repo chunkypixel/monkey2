@@ -7,7 +7,7 @@
 #Import "src/state/gamestate"
 #Import "src/state/titlestate"
 #Import "src/state/playstate"
-#Import "src/state/asteroidsstate"
+'#Import "src/state/asteroidsstate"
 #Import "src/entity/objectentity"
 #Import "src/entity/vectorentity"
 #Import "src/entity/playerentity"
@@ -25,16 +25,16 @@ Using wdw.game2d
 'Game states
 Const TITLE_STATE:Int = 0
 Const PLAY_STATE:Int = 1
-Const ASTEROIDS_STATE:Int = 1
+Const GAME_STATE:Int = 1
 
 'Rocks
-Const SIZE_BIG:Int = 2
-Const SIZE_MEDIUM:Int = 3
-Const SIZE_SMALL:Int = 4
+Const ROCK_BIG:Int=1
+Const ROCK_MEDIUM:Int=2
+Const ROCK_SMALL:Int=3
 
 Function Main()
 	New AppInstance
-	New GridWarsGame(800,600)
+	New GridWarsGame(640,480)
 	App.Run()
 End Function
 
@@ -45,10 +45,10 @@ Class GridWarsGame Extends Game2d
 
 		'Initialise display
 		Layout="letterbox"
-		Self.GameResolution=New Vec2i(width,height*0.80)
+		Self.GameResolution=New Vec2i(width,height)'*0.80)
 		Self.ClearColor=New Color(0,0,0)
 		Self.TextureFilterEnabled=False
-		Style.BackgroundColor=New Color(0,0,0)
+		Style.BackgroundColor=GetColor(0,0,0)
 		Style.DefaultFont=Font.Load("asset::arcade.ttf",10)
 		VSync=False
 		
@@ -82,10 +82,14 @@ Class GridWarsGame Extends Game2d
 		
 		'Create states
 		AddState( New TitleState, TITLE_STATE )
-		AddState( New AsteroidsState, ASTEROIDS_STATE )
+		AddState( New GameState, GAME_STATE )
 		'AddState( New PlayState, PLAY_STATE )
 		Self.EnterTransition=New TransitionFadein
 		
 	End Method
-
+	
+	Method OnRestartGame:Void() Override
+		EnterState( TITLE_STATE, New TransitionFadein, New TransitionFadeout )
+	End Method
+	
 End Class

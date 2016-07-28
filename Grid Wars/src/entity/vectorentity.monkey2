@@ -7,6 +7,7 @@ Private
 	Field _currentScale:Vec2f
 	Field _currentRotation:Float
 Public
+
 	Method New()
 		'Initialise
 		_renderPoints=New VectorPoint[20]	
@@ -19,12 +20,14 @@ Public
 		_basePoints[_points].x=x
 		_basePoints[_points].y=y
 		_points+=1	
-		
-		'Prepare for display
-		Self.RenderPoints()
+		'Plot
+		Self.PlotPoints()
 	End Method
 	
 	Method Update:Void() Override
+		'Validate
+		If (Not Self.Enabled) Return
+
 		'Validate
 		If (Self.X<-5) Self.ResetPosition(GAME.Width+5,Self.Y)
 		If (Self.X>GAME.Width+5) Self.ResetPosition(-5,Self.Y)
@@ -33,8 +36,8 @@ Public
 
 		'Validate
 		If (_currentScale.X<>Self.Scale.X Or _currentScale.Y<>Self.Scale.Y Or _currentRotation<>Self.Rotation)
-			'Update
-			Self.RenderPoints()
+			'Plot
+			Self.PlotPoints()
 								
 			'Store
 			_currentScale=Self.Scale
@@ -44,6 +47,9 @@ Public
 	End Method
 	
 	Method Render:Void(canvas:Canvas) Override
+		'Validate
+		If (Not Self.Enabled Or Not Self.Visible) Return
+		
 		'Canvas
 		Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
 		canvas.TextureFilteringEnabled=True
@@ -51,12 +57,18 @@ Public
 		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
 		canvas.Color=Self.Color
 		
+		Local lineColor:Color=GetColor(128,128,128)
+		Local pointColor:Color=GetColor(160,160,160)
+		
 		'Prepare
 		Local dx:Float=_renderPoints[0].x+Self.X
 		Local dy:Float=_renderPoints[0].y+Self.Y
 		
 		'Draw
 		For Local index:Int=1 Until _points
+			canvas.Color=pointColor
+			canvas.DrawPoint(Int(dx),Int(dy))
+			canvas.Color=lineColor
 			canvas.DrawLine(dx,dy,_renderPoints[index].x+Self.X,_renderPoints[index].y+Self.Y)
 			dx=_renderPoints[index].x+Self.X
 			dy=_renderPoints[index].y+Self.Y
@@ -69,6 +81,10 @@ Public
 	End Method
 	
 	Method CheckCollision:Bool(entity:Entity) Override
+		'Validate
+		If (Not Self.Collision) Return False
+		
+		'Prepare
 		Local j:Int=_points-1
 		Local isColliding:Bool = False
 				
@@ -98,7 +114,7 @@ Public
 	End Method
 	
 Private
-	Method RenderPoints()
+	Method PlotPoints()
 		'Process
 		For Local index:Int=0 Until _points
 			'Prepare

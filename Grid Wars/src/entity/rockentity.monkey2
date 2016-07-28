@@ -3,21 +3,23 @@ Class RockEntity Extends VectorEntity
 
 Private
 	Field _rotationSpeed:Float
-	Field _speed:Float
+	Field _thrust:Float
 Public
 	Field Size:Int=0
 	
-	Method New(size:Int,angle:Int)
+	Method New(position:Vec2f,size:Int,direction:Int)
 		'Create
 		Self.Initialise(size)
 		
 		'Validate
-		If (angle<0) angle+=360
-		If (angle>360) angle-=360
+		If (direction<0) direction+=360
+		If (direction>360) direction-=360
+		Self.Direction=direction
+
+		Self.BlendMode=BlendMode.Additive
+		Self.Color=Color.White
 		
-		'Set
-		Self.Angle=angle
-		Self.Rotation=Rnd(360)
+		Self.ResetPosition(position.X, position.Y)
 	End
 
 	Method Update:Void() Override
@@ -25,9 +27,9 @@ Public
 		Self.Rotation+=_rotationSpeed
 		
 		'Thrust
-		Local radian:=DegreesToRadians(Self.Angle)
-		Self.X+=Cos(radian)*_speed
-		Self.Y+=-Sin(radian)*_speed
+		Local radian:=DegreesToRadians(Self.Direction)
+		Self.X+=Cos(radian)*_thrust
+		Self.Y+=-Sin(radian)*_thrust
 
 		'Base
 		Super.Update()		
@@ -37,8 +39,8 @@ Private
 
 	Method Initialise:Void(size:Int)
 		'Create rock (random)
-		Local rockType:Int=Rnd(0,4)
-		Select rockType
+		Local type:Int=Rnd(0,4)
+		Select type
 			Case 0
 				Self.AddPoint(-10,0)
 				Self.AddPoint(-19,-5)
@@ -101,28 +103,28 @@ Private
 		
 		'Validate
 		Select size
-			Case SIZE_BIG
-				_speed=1.0
+			Case ROCK_BIG
+				_thrust=1.0
 				Self.Scale=New Vec2f(1.25,1.25)
-			Case SIZE_MEDIUM
-				_speed=1.5	
+			Case ROCK_MEDIUM
+				_thrust=1.75	
 				Self.Scale=New Vec2f(0.85,0.85)
 			Default
-				'SIZE_SMALL
-				_speed=2.0
-				Self.Scale=New Vec2f(0.5,0.5)					
+				'ROCK_SMALL
+				_thrust=2.5
+				Self.Scale=New Vec2f(0.35,0.35)					
 		End Select
 
 		'Color
-		Local r:Int=Rnd(0,4)*64
-		Local g:Int=Rnd(0,4)*64
-		Local b:Int=Rnd(0,4)*64
-		Self.Color=GetColor(r,g,b)
+		'Local r:Int=Rnd(0,4)*64
+		'Local g:Int=Rnd(0,4)*64
+		'Local b:Int=Rnd(0,4)*64
+		'Self.Color=GetColor(r,g,b)
 		
 		'Set
 		_rotationSpeed=Rnd(-3,3)		
 		Self.Size=size
-		
+		Self.Collision=True
 	End Method
 		
 End Class

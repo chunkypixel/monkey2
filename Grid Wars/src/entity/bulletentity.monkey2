@@ -3,15 +3,14 @@ Class BulletEntity Extends ImageEntity
 
 Private
 	Field _life:Int=45
-	field _speed:Float=9.0	' 4.5
+	field _thrust:Float=9.0	' 4.5
 Public
 	Field State:GameState
 
-	Method New(rotation:Float,position:Vec2f)
+	Method New(position:Vec2f,direction:Float)
 		Super.New(BulletImage)
-		Self.Rotation=rotation
-		Self.Radius=4
-		
+		Self.Rotation=direction
+				
 		Self.Scale=New Vec2f(0.5,0.5)
 		Self.BlendMode=BlendMode.Additive
 		Self.Color=Color.White
@@ -35,45 +34,44 @@ Public
 
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Rotation)
-		Self.X+=Cos(radian)*_speed
-		Self.Y+=-Sin(radian)*_speed
-
+		Self.X+=Cos(radian)*_thrust
+		Self.Y+=-Sin(radian)*_thrust
+		
 		'collision with objects?
 		Local group:=GetEntityGroup("rocks")
 		For Local entity:=Eachin group.Entities
 			'Validate
 			Local rock:=Cast<RockEntity>(entity)
-			If (rock.Collision And rock.CheckCollision(Self)) 
+			If (rock.CheckCollision(Self)) 
 				'Remove bullet
 				RemoveEntity(Self)
 				
 				'Explode
-				Self.State.Shockwave(rock.X,rock.Y)
-				Self.State.Fireworks(rock.X,rock.Y)
-			
-				'Create new rocks
-				For Local i:= 1 To 2
-					'Set angle
-					Local angle:Int=rock.Angle
-					If (i=1) angle-=90
-					If (i=2) angle+=90
-					
-					'Create
-					Local newrock:=New RockEntity(rock.Size+1,angle)
-					newrock.ResetPosition(rock.X,rock.Y)
-					AddEntity(newrock,LAYER_ROCKS)
-					AddEntityToGroup(newrock, "rocks")
-					'state.rockCount+=1
-				Next
-
+				'Self.State.Shockwave(rock.X,rock.Y)
+				Self.State.Explosion(rock.X,rock.Y)
+				Self.State.Shake()
+				
+				'Score
+				Self.State.Player.Score+=(50*rock.Size)
+				
+				'Create new rocks?
+				If (rock.Size<ROCK_SMALL)
+					For Local i:= 1 To 2
+						'Get direction
+						Local direction:Int=rock.Direction
+						If (i=1) direction-=90
+						If (i=2) direction+=90
+						
+						'Create
+						Self.State.CreateRock(rock.Position,rock.Size+1,direction)
+					Next
+				End
+				
 				'Remove rock
-				RemoveEntity(rock)
-				'state.rockCount-=1
+				Self.State.RemoveRock(rock)
 
-				'avoid scanning more rock collisions
-				'for this bullet
+				'Exit
 				Return
-
 			End
 		
 		Next

@@ -5,6 +5,7 @@ Const LAYER_PLAYER:Int=3
 Const LAYER_PARTICLES:Int=4
 
 Class AsteroidsState Extends GameState
+
 Private
 	Field player:PlayerEntity
 	Field rockCount:Int
@@ -49,8 +50,14 @@ Public
 	'Method Render:Void(canvas:Canvas,tween:Double) Override		
 	'End Method
 	
-	'Method PostRender:Void(canvas:Canvas,tween:Double) Override
-	'End Method
+	Method PostRender:Void(canvas:Canvas,tween:Double) Override
+		canvas.Color=Color.Red
+		canvas.DrawText("SCORE",32,0)
+		canvas.DrawText("HIGH-SCORE",180,0)
+		canvas.Color=Color.White
+		Local score:String="       "+player.Score
+		canvas.DrawText(score.Right(7),24,10)
+	End Method
 		
 Private
 	Method CreatePlayer:Void()
@@ -62,7 +69,7 @@ Private
 
 	Method CreateRocks:Void()
 		For Local count:=0 Until maxRocks
-			Local rock:=New RockEntity(SIZE_BIG,Rnd(360))
+			Local rock:=New RockEntity(ROCK_BIG,Rnd(360))
 			rock.ResetPosition(Rnd(10,GAME.Width-10),Rnd(10,GAME.Height-10))
 			AddEntity(rock,LAYER_ROCKS)
 			AddEntityToGroup(rock, "rocks")
