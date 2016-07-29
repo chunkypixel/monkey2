@@ -1,5 +1,6 @@
 'Source
 #Import "src/particles"
+#Import "src/font"
 #Import "src/state/game"
 #Import "src/state/title"
 #Import "src/entity/object"
@@ -7,6 +8,7 @@
 #Import "src/entity/player"
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
+
 'Assets
 #Import "assets/gfx/arcade.ttf"
 #Import "assets/gfx/logo.png"

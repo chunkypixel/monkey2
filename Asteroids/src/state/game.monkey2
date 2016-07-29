@@ -75,10 +75,12 @@ Public
 		Local score:String="00"
 		If (Player.Score>0) score=Player.Score
 		score="       "+score
+		
 		'Render
 		canvas.Color=Color.White
-		canvas.DrawText("SCORE",48,8)
-		canvas.DrawText(score.Right(7),40,18)
+		VectorFont.DrawFont(canvas,"SCORE",48,16,1.5)
+		VectorFont.DrawFont(canvas,score.Right(7),40,28,1.5)
+
 	End Method
 			
 	Method Shake:Void(radius:Float=2)
