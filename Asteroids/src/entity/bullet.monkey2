@@ -87,6 +87,12 @@ Public
 		canvas.Alpha=1.0
 	End Method
 
+	Method CheckCollision:Bool(entity:Entity) Override
+		'Validate
+		If (Not Self.Collision) Return False
+		Return Self.PointInPolyCollision(Cast<VectorEntity>(entity))
+	End Method
+	
 Private
 	Method Initialise()
 		'Create

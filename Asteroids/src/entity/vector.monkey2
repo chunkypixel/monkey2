@@ -19,6 +19,14 @@ Public
 		Self.PointColor=Color.FromARGB($C0C0C088)
 	End Method
 	
+	Property RenderPoints:VectorPoint[]()
+		Return _renderPoints
+	End
+	
+	Property Points:Int()
+		Return _points
+	End
+	
 	Method AddPoint(x:Float,y:Float)
 		'Set
 		_basePoints[_points].x=x
@@ -90,36 +98,94 @@ Public
 	Method CheckCollision:Bool(entity:Entity) Override
 		'Validate
 		If (Not Self.Collision) Return False
+		Return Self.OverlapCollision(Cast<VectorEntity>(entity))
+	End Method
 		
-		'Prepare
-		Local j:Int=_points-1
-		Local isColliding:Bool = False
-				
+	'Comparision between two objects
+	Method OverlapCollision:Bool(entity:VectorEntity)
 		'Process
-		For Local i:Int=0 Until _points
+		For Local k:Int=0 until entity.Points
 			'Prepare
-			Local xI:Float=_renderPoints[i].x+Self.X
-			Local yI:Float=_renderPoints[i].y+Self.Y
-			Local xJ:Float=_renderPoints[j].x+Self.X
-			Local yJ:Float=_renderPoints[j].y+Self.Y
+			Local eX:Float=entity.RenderPoints[k].x+entity.X
+			Local eY:Float=entity.RenderPoints[k].y+entity.Y
 			
 			'Validate
-			'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-			If (((yI>entity.Y)<>(yJ>entity.Y)) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
-				isColliding=Not isColliding
-			End
-			'If ((((yI<=entity.Y) And (entity.Y<yJ)) Or ((yJ<=entity.Y) And (entity.Y<yI))) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
-			'	isColliding=Not isColliding
-			'End
+			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,eX,eY)) Return True
 			
-			'Store
-			j=i
+			'Local j:Int=_points-1
+			'Local isColliding:Bool = False
+			
+			'Process
+			'For Local i:Int=0 Until _points
+			'	'Prepare
+			'	Local xI:Float=_renderPoints[i].x+Self.X
+			'	Local yI:Float=_renderPoints[i].y+Self.Y
+			'	Local xJ:Float=_renderPoints[j].x+Self.X
+			'	Local yJ:Float=_renderPoints[j].y+Self.Y
+			'	
+			'	'Validate
+			'	'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+			'	If (((yI>nY)<>(yJ>nY)) And (nX<(xJ-xI)*(nY-yI)/(yJ-yI)+xI)) 
+			'		isColliding=Not isColliding
+			'	End
+			'	'If ((((yI<=entity.Y) And (entity.Y<yJ)) Or ((yJ<=entity.Y) And (entity.Y<yI))) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
+			'	'	isColliding=Not isColliding
+			'	'End
+			'	
+			'	'Store
+			'	j=i
+			'Next
+			
+			'Result?
+			'If (isColliding) Return True
+		Next
+		
+		'Process (Double check??)
+		For Local k:Int=0 until _points
+			'Prepare
+			Local sX:Float=_renderPoints[k].x+Self.X
+			Local sY:Float=_renderPoints[k].y+Self.Y
+			
+			'Validate
+			If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sX,sY)) Return True
+			
+			'Local j:Int=entity.Points-1
+			'Local isColliding:Bool = False
+			
+			'Process
+			'For Local i:Int=0 Until entity.Points
+			'	'Prepare
+			'	Local xI:Float=entity.RenderPoints[i].x+entity.X
+			'	Local yI:Float=entity.RenderPoints[i].y+entity.Y
+			'	Local xJ:Float=entity.RenderPoints[j].x+entity.X
+			'	Local yJ:Float=entity.RenderPoints[j].y+entity.Y
+			'	
+			'	'Validate
+			'	'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+			'	If (((yI>nY)<>(yJ>nY)) And (nX<(xJ-xI)*(nY-yI)/(yJ-yI)+xI)) 
+			'		isColliding=Not isColliding
+			'	End
+			'	'If ((((yI<=entity.Y) And (entity.Y<yJ)) Or ((yJ<=entity.Y) And (entity.Y<yI))) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
+			'	'	isColliding=Not isColliding
+			'	'End
+			'	
+			'	'Store
+			'	j=i
+			'Next
+			
+			'Result?
+			'If (isColliding) Return True
 		Next
 		
 		'Return
-		Return isColliding	
-	End Method
+		Return False	
+	End
 	
+	'Comparison between object and point
+	Method PointInPolyCollision:Bool(entity:VectorEntity)
+		Return Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,entity.X,entity.Y)
+	End Method
+
 Private
 	Method PlotPoints()
 		'Process
@@ -146,6 +212,31 @@ Private
 			_renderPoints[index].y=fy
 		Next
 	End Method
+	
+	Method CollisionState:Bool(points:VectorPoint[],totalPoints:Int,x1:Int,y1:Int,x2:Int,y2:Int)
+		'Prepare
+		Local j:Int=totalPoints-1
+		Local isColliding:Bool=False
+		
+		'Process
+		For Local i:Int=0 Until totalPoints
+			'Prepare
+			Local xI:Float=points[i].x+x1
+			Local yI:Float=points[i].y+y1
+			Local xJ:Float=points[j].x+x1
+			Local yJ:Float=points[j].y+y1
+			
+			'Validate
+			'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+			If (((yI>y2)<>(yJ>y2)) And (x2<(xJ-xI)*(y2-yI)/(yJ-yI)+xI)) isColliding=Not isColliding
+			
+			'Store
+			j=i
+		Next
+
+		'Return result
+		Return isColliding
+	End
 	
 End Class
 
