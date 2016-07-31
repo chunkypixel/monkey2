@@ -64,18 +64,20 @@ Public
 		_rotation = value
 	End
 
-	Property BlendMode:BlendMode()
-		Return _blend
-	Setter( value:BlendMode )
-		_blend = value
-	End
-
 	#Rem monkeydoc Returns or sets the entity direction (in degrees)
 	#End	
 	Property Direction:Float()
 		Return _direction
 	Setter( value:float )
 		_direction = value
+	End
+
+	#Rem monkeydoc Returns or sets the entity rendering blend mode
+	#End	
+	Property BlendMode:BlendMode()
+		Return _blend
+	Setter( value:BlendMode )
+		_blend = value
 	End
 		
 End Class

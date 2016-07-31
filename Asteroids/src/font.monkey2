@@ -15,7 +15,7 @@ Public
 		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
 		'canvas.TextureFilteringEnabled=False
 		'canvas.BlendMode=BlendMode.Alpha	'Self.BlendMode	
-		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=1.5	'For now make all lines >1.0 for smoothing
 		canvas.Color=Color.White
 		
 		'Make uppercase (for now)

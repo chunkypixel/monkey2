@@ -1,24 +1,27 @@
+'Size
+Enum RockSize
+	Big=1
+	Medium=2
+	Small=3
+End
 
 Class RockEntity Extends VectorEntity
 
 Private
 	Field _rotationSpeed:Float
-	Field _thrust:Float
 Public
 	Field Size:Int=0
 	
-	Method New(position:Vec2f,size:Int,direction:Int)
+	Method New(position:Vec2f,size:Int,direction:Int,speed:Float=1.0)
 		'Create
-		Self.Initialise(size)
+		Self.Initialise(size,speed)
 		
-		'Validate
+		'Direction
 		If (direction<0) direction+=360
 		If (direction>360) direction-=360
 		Self.Direction=direction
-
-		Self.BlendMode=BlendMode.Additive
-		Self.Color=Color.White
 		
+		'Position
 		Self.ResetPosition(position.X, position.Y)
 	End
 
@@ -28,8 +31,8 @@ Public
 		
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
-		Self.X+=Cos(radian)*_thrust
-		Self.Y+=-Sin(radian)*_thrust
+		Self.X+=Cos(radian)*Self.Speed
+		Self.Y+=-Sin(radian)*Self.Speed
 
 		'Base
 		Super.Update()		
@@ -37,8 +40,8 @@ Public
 
 Private
 
-	Method Initialise:Void(size:Int)
-		'Create rock (random)
+	Method Initialise:Void(size:Int,speed:Float)
+		'Points
 		Local type:Int=Rnd(0,4)
 		Select type
 			Case 0
@@ -101,29 +104,23 @@ Private
 			
 		End Select
 		
-		'Validate
+		'Speed,Size etc
 		Select size
-			Case ROCK_BIG
-				_thrust=1.0
+			Case RockSize.Big
 				Self.Scale=New Vec2f(1.25,1.25)
-			Case ROCK_MEDIUM
-				_thrust=1.75	
+				Self.Speed=1.0
+			Case RockSize.Medium
 				Self.Scale=New Vec2f(0.85,0.85)
+				Self.Speed=1.75	
 			Default
-				'ROCK_SMALL
-				_thrust=2.5
+				'RockSize.Small
 				Self.Scale=New Vec2f(0.35,0.35)					
+				Self.Speed=2.5
 		End Select
-
-		'Color
-		'Local r:Int=Rnd(0,4)*64
-		'Local g:Int=Rnd(0,4)*64
-		'Local b:Int=Rnd(0,4)*64
-		'Self.Color=GetColor(r,g,b)
-		
-		'Set
-		_rotationSpeed=Rnd(-3,3)		
 		Self.Size=size
+
+		'Other
+		_rotationSpeed=Rnd(-3,3)		
 		Self.Collision=True
 	End Method
 		

@@ -7,15 +7,15 @@ Private
 	Field _currentScale:Vec2f
 	Field _currentRotation:Float
 Public
-	Field LineColor:Color
 	Field PointColor:Color
-
+	Field Speed:Float=0.0
+	
 	Method New()
 		'Initialise
 		Self.BlendMode=BlendMode.Additive
 		_renderPoints=New VectorPoint[20]	
 		_basePoints=New VectorPoint[20]	
-		Self.LineColor=Color.FromARGB($A0A0A088)
+		Self.Color=Color.FromARGB($A0A0A088)
 		Self.PointColor=Color.FromARGB($C0C0C088)
 	End Method
 	
@@ -79,7 +79,7 @@ Public
 		'Process
 		For Local index:Int=1 Until _points
 			'Render
-			canvas.Color=Self.LineColor
+			canvas.Color=Self.Color
 			canvas.DrawLine(dx,dy,_renderPoints[index].x+Self.X,_renderPoints[index].y+Self.Y)
 			'canvas.Color=Self.PointColor
 			canvas.DrawPoint(Int(dx),Int(dy))

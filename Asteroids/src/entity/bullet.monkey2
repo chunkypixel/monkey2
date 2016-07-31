@@ -2,40 +2,41 @@
 Class BulletEntity Extends VectorEntity
 
 Private
-	Field _life:Int=45
-	field _thrust:Float=9.0	' 4.5
+	Field _active:Int=45
 Public
-	Field State:GameState
 
 	Method New(position:Vec2f,direction:Float)
+		'Create
 		Self.Initialise()
-		'Offset (from tip)
+		
+		'Direction
+		Self.Direction=direction
+
+		'Position (offset from tip)
 		Local radian:=DegreesToRadians(direction)
 		position.X+=Cos(radian)*8
 		position.Y+=-Sin(radian)*8
-		'Set
-		Self.Rotation=direction
-		Self.ResetPosition(position.X,position.Y)		
+		Self.ResetPosition(position.X,position.Y)	
 	End Method
 
 	Method Update:Void() Override
+		'Remove?
+		 _active-=1
+		If (_active=0)
+			RemoveEntity(Self)
+			Return
+		End
+
 		'Validate
 		If (Self.X<-5) Self.ResetPosition(GAME.Width+5,Self.Y)
 		If (Self.X>GAME.Width+5) Self.ResetPosition(-5,Self.Y)
 		If (Self.Y<-5) Self.ResetPosition(Self.X,GAME.Height+5)
 		If (Self.Y>GAME.Height+5) Self.ResetPosition(Self.X,-5)
 
-		'Reduce life
-		_life-=1
-		If (_life=0)
-			RemoveEntity(Self)
-			Return
-		End
-
 		'Thrust
-		Local radian:=DegreesToRadians(Self.Rotation)
-		Self.X+=Cos(radian)*_thrust
-		Self.Y+=-Sin(radian)*_thrust
+		Local radian:=DegreesToRadians(Self.Direction)
+		Self.X+=Cos(radian)*Self.Speed
+		Self.Y+=-Sin(radian)*Self.Speed
 		
 		'Collision with rocks?
 		Local group:=GetEntityGroup("rocks")
@@ -46,31 +47,21 @@ Public
 				'Explode (and shake)
 				Self.State.CreateExplosion(rock.Position)
 				Self.State.Shake()
+				PlaySound("Explode"+Int(Rnd(1,4)))
 				
-				'Increment
-				Self.State.Player.Score+=(50*rock.Size)
+				'Score
+				Local score:Int=20
+				If (rock.Size=RockSize.Medium) score=50
+				If (rock.Size=RockSize.Small) score=100
+				Self.State.Player.Score+=score
 				
-				'Create new rocks?
-				If (rock.Size<ROCK_SMALL)
-					For Local i:= 1 To 2
-						'Get direction
-						Local direction:Int=rock.Direction
-						If (i=1) direction-=90
-						If (i=2) direction+=90
-						
-						'Create
-						Self.State.CreateRock(rock.Position,rock.Size+1,direction)
-					Next
-				End
+				'Split
+				Self.State.SplitRock(rock)
 				
-				'Remove
-				Self.State.RemoveRock(rock)
+				'Finalise				
 				RemoveEntity(Self)
-
-				'Exit
 				Return
 			End
-		
 		Next			
 	End Method
 	
@@ -95,11 +86,15 @@ Public
 	
 Private
 	Method Initialise()
-		'Create
+		'Points
 		Self.AddPoint(0,0)
 		Self.AddPoint(1,1)
+		
+		'Speed
+		Self.Speed=9.0
+
 		'Size
-		'Self.Scale=New Vec2f(1.0,1.0)
+		'Self.Scale=New Vec2f(1.0,1.0)	
 	End Method
 	
 End Class

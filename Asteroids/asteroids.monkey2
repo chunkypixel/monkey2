@@ -8,12 +8,17 @@
 #Import "src/entity/player"
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
-
-'Assets
+'Assets (gfx)
 #Import "assets/gfx/arcade.ttf"
 #Import "assets/gfx/logo.png"
 #Import "assets/gfx/particle.png"
 #Import "assets/gfx/background.png"
+'Assets (snd)
+#Import "assets/snd/fire.wav"
+#Import "assets/snd/thrust.wav"
+#Import "assets/snd/explode1.wav"
+#Import "assets/snd/explode2.wav"
+#Import "assets/snd/explode3.wav"
 
 'System
 #Import "<std>"
@@ -26,11 +31,6 @@ Using wdw.game2d
 'Game states
 Const TITLE_STATE:Int = 0
 Const GAME_STATE:Int = 1
-
-'Rocks
-Const ROCK_BIG:Int=1
-Const ROCK_MEDIUM:Int=2
-Const ROCK_SMALL:Int=3
 
 Function Main()
 	New AppInstance
@@ -65,9 +65,9 @@ Class AsteroidsGame Extends Game2d
 		AddKeyboardControl("THRUST",Key.Up)
 		AddKeyboardControl("FIRE",Key.LeftControl)
 		'Joystick
-		AddJoystickAxisControl( "TURN", 0 )
-		AddJoystickButtonControl( "FIRE", 1 )
-		AddJoystickButtonControl( "THRUST", 2 )
+		AddJoystickAxisControl("TURN",0)
+		AddJoystickButtonControl("FIRE",1)
+		AddJoystickButtonControl("THRUST",2)
 		' apply loaded input settings to the input manager.
 		' this will override the controls defined above;
 		' they will be removed and the ones in the configuration will be added.
@@ -82,6 +82,11 @@ Class AsteroidsGame Extends Game2d
 		SetImageHandle("Background",New Vec2f(0.5,0.5))
 
 		'Add sounds
+		AddSound("Fire","asset::fire.wav")
+		AddSound("Thrust","asset::thrust.wav")
+		AddSound("Explode1","asset::explode1.wav")
+		AddSound("Explode2","asset::explode2.wav")
+		AddSound("Explode3","asset::explode3.wav")
 		
 		'Create states
 		AddState( New TitleState,TITLE_STATE )
@@ -101,7 +106,12 @@ Function GetColor:Color(red:Float,green:Float,blue:Float)
 	Return New Color(red/255,green/255,blue/255)
 End Function
 
-Function SetImageHandle(name:String,handle:Vec2f)
+Function SetImageHandle:Void(name:String,handle:Vec2f)
 	Local image:=GetImage(name)
 	If (image<>Null) image.Handle=handle
 End Function
+
+Function PlaySound:Void(name:String,volume:Float,loop:Int)
+
+End
+
