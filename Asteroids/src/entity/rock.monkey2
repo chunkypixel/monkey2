@@ -12,20 +12,19 @@ Private
 Public
 	Field Size:Int=0
 	
-	Method New(position:Vec2f,size:Int,direction:Int,speed:Float=1.0)
+	Method New(position:Vec2f,size:Int,direction:Int,speed:Float)
 		'Create
-		Self.Initialise(size,speed)
-		
-		'Direction
-		If (direction<0) direction+=360
-		If (direction>360) direction-=360
-		Self.Direction=direction
+		Self.Initialise(size,direction,speed)
 		
 		'Position
 		Self.ResetPosition(position.X, position.Y)
 	End
 
 	Method Update:Void() Override
+		'Base
+		If (Not Self.Enabled) Return
+		Super.Update()		
+		
 		'Spin
 		Self.Rotation+=_rotationSpeed
 		
@@ -33,14 +32,10 @@ Public
 		Local radian:=DegreesToRadians(Self.Direction)
 		Self.X+=Cos(radian)*Self.Speed
 		Self.Y+=-Sin(radian)*Self.Speed
-
-		'Base
-		Super.Update()		
 	End Method
 
 Private
-
-	Method Initialise:Void(size:Int,speed:Float)
+	Method Initialise:Void(size:Int,direction:Float,speed:Float)
 		'Points
 		Local type:Int=Rnd(0,4)
 		Select type
@@ -56,8 +51,7 @@ Private
 				Self.AddPoint(-1,6)
 				Self.AddPoint(-9,20)
 				Self.AddPoint(-20,6)
-				Self.AddPoint(-10,0)
-			
+				Self.AddPoint(-10,0)			
 			Case 1
 				Self.AddPoint(-20,-8)
 				Self.AddPoint(-5,-8)
@@ -71,8 +65,7 @@ Private
 				Self.AddPoint(6,15)
 				Self.AddPoint(-10,20)
 				Self.AddPoint(-20,8)
-				Self.AddPoint(-20,-8)				
-			
+				Self.AddPoint(-20,-8)							
 			Case 2
 				Self.AddPoint(-15,0)
 				Self.AddPoint(-20,-11)
@@ -86,8 +79,7 @@ Private
 				Self.AddPoint(-4,15)
 				Self.AddPoint(-9,20)
 				Self.AddPoint(-20,11)
-				Self.AddPoint(-14,0)				
-			
+				Self.AddPoint(-14,0)							
 			Case 3
 				Self.AddPoint(-20,-11)
 				Self.AddPoint(-8,-20)
@@ -100,28 +92,32 @@ Private
 				Self.AddPoint(8,20)
 				Self.AddPoint(-8,20)
 				Self.AddPoint(-20,11)				
-				Self.AddPoint(-20,-11)				
-			
+				Self.AddPoint(-20,-11)							
 		End Select
 		
-		'Speed,Size etc
+		'Size
 		Select size
 			Case RockSize.Big
-				Self.Scale=New Vec2f(1.25,1.25)
-				Self.Speed=1.0
+				Self.Scale=New Vec2f(1.00,1.00)
 			Case RockSize.Medium
-				Self.Scale=New Vec2f(0.85,0.85)
-				Self.Speed=1.75	
+				Self.Scale=New Vec2f(0.50,0.50)
 			Default
-				'RockSize.Small
-				Self.Scale=New Vec2f(0.35,0.35)					
-				Self.Speed=2.5
+				Self.Scale=New Vec2f(0.25,0.25)					
 		End Select
 		Self.Size=size
 
+		'Direction
+		If (direction<0) direction+=360
+		If (direction>360) direction-=360
+		Self.Direction=direction
+
 		'Other
-		_rotationSpeed=Rnd(-3,3)		
+		Self.Speed=speed
 		Self.Collision=True
+		_rotationSpeed=Rnd(-2,2)	
+		
+		'Reset
+		Self.Reset()	
 	End Method
 		
 End Class

@@ -20,18 +20,16 @@ Public
 	End Method
 
 	Method Update:Void() Override
+		'Base
+		If (Not Self.Enabled) Return
+		Super.Update()		
+
 		'Remove?
 		 _active-=1
 		If (_active=0)
 			RemoveEntity(Self)
 			Return
 		End
-
-		'Validate
-		If (Self.X<-5) Self.ResetPosition(GAME.Width+5,Self.Y)
-		If (Self.X>GAME.Width+5) Self.ResetPosition(-5,Self.Y)
-		If (Self.Y<-5) Self.ResetPosition(Self.X,GAME.Height+5)
-		If (Self.Y>GAME.Height+5) Self.ResetPosition(Self.X,-5)
 
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
@@ -47,7 +45,6 @@ Public
 				'Explode (and shake)
 				Self.State.CreateExplosion(rock.Position)
 				Self.State.Shake()
-				PlaySound("Explode"+Int(Rnd(1,4)))
 				
 				'Score
 				Local score:Int=20
@@ -58,6 +55,9 @@ Public
 				'Split
 				Self.State.SplitRock(rock)
 				
+				'Sound
+				PlaySound("Explode2")	'"+Int(Rnd(1,4)))
+
 				'Finalise				
 				RemoveEntity(Self)
 				Return
@@ -90,10 +90,8 @@ Private
 		Self.AddPoint(0,0)
 		Self.AddPoint(1,1)
 		
-		'Speed
+		'Other
 		Self.Speed=9.0
-
-		'Size
 		'Self.Scale=New Vec2f(1.0,1.0)	
 	End Method
 	

@@ -54,8 +54,7 @@ Public
 		'Validate
 		If (_currentScale.X<>Self.Scale.X Or _currentScale.Y<>Self.Scale.Y Or _currentRotation<>Self.Rotation)
 			'Plot
-			Self.PlotPoints()
-								
+			Self.PlotPoints()				
 			'Store
 			_currentScale=Self.Scale
 			_currentRotation=Self.Rotation
@@ -111,33 +110,6 @@ Public
 			
 			'Validate
 			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,eX,eY)) Return True
-			
-			'Local j:Int=_points-1
-			'Local isColliding:Bool = False
-			
-			'Process
-			'For Local i:Int=0 Until _points
-			'	'Prepare
-			'	Local xI:Float=_renderPoints[i].x+Self.X
-			'	Local yI:Float=_renderPoints[i].y+Self.Y
-			'	Local xJ:Float=_renderPoints[j].x+Self.X
-			'	Local yJ:Float=_renderPoints[j].y+Self.Y
-			'	
-			'	'Validate
-			'	'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-			'	If (((yI>nY)<>(yJ>nY)) And (nX<(xJ-xI)*(nY-yI)/(yJ-yI)+xI)) 
-			'		isColliding=Not isColliding
-			'	End
-			'	'If ((((yI<=entity.Y) And (entity.Y<yJ)) Or ((yJ<=entity.Y) And (entity.Y<yI))) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
-			'	'	isColliding=Not isColliding
-			'	'End
-			'	
-			'	'Store
-			'	j=i
-			'Next
-			
-			'Result?
-			'If (isColliding) Return True
 		Next
 		
 		'Process (Double check??)
@@ -148,33 +120,6 @@ Public
 			
 			'Validate
 			If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sX,sY)) Return True
-			
-			'Local j:Int=entity.Points-1
-			'Local isColliding:Bool = False
-			
-			'Process
-			'For Local i:Int=0 Until entity.Points
-			'	'Prepare
-			'	Local xI:Float=entity.RenderPoints[i].x+entity.X
-			'	Local yI:Float=entity.RenderPoints[i].y+entity.Y
-			'	Local xJ:Float=entity.RenderPoints[j].x+entity.X
-			'	Local yJ:Float=entity.RenderPoints[j].y+entity.Y
-			'	
-			'	'Validate
-			'	'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-			'	If (((yI>nY)<>(yJ>nY)) And (nX<(xJ-xI)*(nY-yI)/(yJ-yI)+xI)) 
-			'		isColliding=Not isColliding
-			'	End
-			'	'If ((((yI<=entity.Y) And (entity.Y<yJ)) Or ((yJ<=entity.Y) And (entity.Y<yI))) And (entity.X<(xJ-xI)*(entity.Y-yI)/(yJ-yI)+xI)) 
-			'	'	isColliding=Not isColliding
-			'	'End
-			'	
-			'	'Store
-			'	j=i
-			'Next
-			
-			'Result?
-			'If (isColliding) Return True
 		Next
 		
 		'Return

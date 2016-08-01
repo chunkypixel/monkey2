@@ -27,16 +27,16 @@ Public
 	Property Visible:Bool()
 		Return _visible
 	Setter( value:Bool )
-		_visible = value
+		_visible=value
 	End
 
 	#Rem monkeydoc Returns or sets the entity enabled flag.
 	When set to False, the entity is not updated or rendered.
 	#End
 	Property Enabled:Bool()
-		Return _visible
+		Return _enabled
 	Setter( value:Bool )
-		_visible = value
+		_enabled=value
 	End
 		
 	#Rem monkeydoc Returns or sets the entity image scale.
@@ -44,7 +44,7 @@ Public
 	Property Scale:Vec2f()
 		Return _scale
 	Setter( value:Vec2f )
-		_scale = value
+		_scale=value
 	End
 
 	#Rem monkeydoc Returns or sets the entity color value.
@@ -53,7 +53,7 @@ Public
 	Property Color:Color()
 		Return _color
 	Setter( value:Color )
-		_color = value
+		_color=value
 	End
 
 	#Rem monkeydoc Returns or sets the entity rotation (in degrees)
@@ -61,7 +61,7 @@ Public
 	Property Rotation:Float()
 		Return _rotation
 	Setter( value:Float )
-		_rotation = value
+		_rotation=value
 	End
 
 	#Rem monkeydoc Returns or sets the entity direction (in degrees)
@@ -69,7 +69,7 @@ Public
 	Property Direction:Float()
 		Return _direction
 	Setter( value:float )
-		_direction = value
+		_direction=value
 	End
 
 	#Rem monkeydoc Returns or sets the entity rendering blend mode
@@ -77,7 +77,7 @@ Public
 	Property BlendMode:BlendMode()
 		Return _blend
 	Setter( value:BlendMode )
-		_blend = value
+		_blend=value
 	End
 		
 End Class

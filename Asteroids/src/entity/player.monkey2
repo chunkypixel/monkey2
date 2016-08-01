@@ -5,7 +5,7 @@ Enum PlayerStateFlags
 	Exploding=3
 End
 
-Class PlayerEntity Extends VectorEntity
+Class PlayerEntity Extends ShipEntity
 
 'NOTES:
 ' - When ship resets still in direction of last direction - does not reset back up
@@ -15,48 +15,64 @@ Class PlayerEntity Extends VectorEntity
 Private
 	Field _velocity:=New Vec2f
 	Field _thrustChannel:Channel
+	Field _explodingCounterTimer:CounterTimer
 Public
-	Field Lives:Int=3
+	Field Lives:Int=MAX_LIVES
 	Field Score:Int=0
+	Field Level:Int=1
 	Field PlayerState:PlayerStateFlags
 	
 	Method New()
 		'Create
 		Self.Initialise()
+		
+		'Counter
+		_explodingCounterTimer=New CounterTimer(150,False)
 	End
 	
 	Method Reset:Void() Override
+		'Base
+		Super.Reset()
+
 		'Set
 		Self.PlayerState=PlayerStateFlags.Release
 		Self.Visible=False
 		Self.ResetPosition(GAME.GameResolution.X/2,GAME.GameResolution.Y/2)	
-		_velocity=New Vec2f()
-					
-		'Base
-		Super.Reset()
+		_velocity=New Vec2f()	
 	End
 	
 	Method Update:Void() Override
-		'Process?
-		If (Self.State.GameState<>GameStateFlags.Play) Return
+		'Base
+		If (Not Self.Enabled) Return
+		Super.Update()		
 				
 		'State
 		Select Self.PlayerState
 			Case PlayerStateFlags.Release
 				'Prepare
-				Local canRelease:Bool=True
+				Local canRelease:Bool=True		 
 
 				'Validate
 				Local group:=GetEntityGroup("rocks")
 				For Local entity:=Eachin group.Entities
 					'Validate (check zone around player)
-					If (Self.InExclusionZone(entity)) canRelease=False
+					If (Self.State.InExclusionZone(entity)) canRelease=False
 				Next		
 				
 				'Can we release?
 				If (canRelease) 
 					Self.PlayerState=PlayerStateFlags.Active
 					Self.Visible=True
+					
+					'Display rocks (if required)					
+					Local group:=GetEntityGroup("rocks")
+					For Local entity:Entity=Eachin group.Entities
+						Local rock:=Cast<RockEntity>(entity)
+						rock.Enabled=True
+					Next
+					
+					'Remove life
+					Self.Lives-=1
 				End
 				
 			Case PlayerStateFlags.Active
@@ -98,8 +114,7 @@ Public
 				
 				'Fire?
 				If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE"))
-					'Count
-					'Player can fire a max of 4 bullets
+					'Validate
 					If (Self.State.TotalBullets<4) 
 						'Create bullet
 						Local bullet:=New BulletEntity(New Vec2f(Self.X,Self.Y),Self.Rotation)
@@ -108,8 +123,8 @@ Public
 						AddEntityToGroup(bullet,"bullets")
 						
 						'Sound
-						Local fireChannel:=PlaySound("Fire")
-						fireChannel.Volume=0.25
+						Local channel:=PlaySound("Fire")
+						channel.Volume=0.35
 					End
 				End
 				
@@ -128,51 +143,40 @@ Public
 						Self.State.CreateExplosion(Self.Position)
 						Self.State.Shake(10)
 						
+						'Split
+						Self.State.SplitRock(rock)
+	
 						'Sound
 						PlaySound("Explode1")
-						
+					
 						'Set
 						Self.PlayerState=PlayerStateFlags.Exploding
-						Self.Lives-=1
 						Self.Visible=False
+						_explodingCounterTimer.Reset()
 					End
 				Next		
 			
-			Case PlayerStateFlags.Exploding				
+			Case PlayerStateFlags.Exploding	
 				'Finished?
-				If (Self.Lives=0) 
-					Self.State.GameState=GameStateFlags.GameOver
-					Return
-				End
+				If (Self.Lives=0) Self.Enabled=False
 				
-				'TODO: Validate (timer)
-				Self.Reset()
+				'Restart?
+				If (_explodingCounterTimer.Elapsed) Self.Reset() 			
 		End
-						
-		'Base
-		Super.Update()
 	End Method
-		
-	Method InExclusionZone:Bool(entity:Entity)
-		return (entity.X>Self.X-100 And entity.X<Self.X+100 And entity.Y>Self.Y-100 And entity.Y<Self.Y+100) 		
-	End
-	
-Private
-	Method Initialise()
-		'Points
-		Self.AddPoint(-8,-8)
-		Self.AddPoint(12,0)
-		Self.AddPoint(-8,8)
-		Self.AddPoint(-5,0)
-		Self.AddPoint(-8,-8)
 			
+Private
+	Method Initialise() Override
+		'Base
+		Super.Initialise()
+		
 		'Other
 		Self.Speed=0.07
-		Self.Scale=New Vec2f(0.75,0.75)
-		Self.Rotation=90.0
-		
+		Self.Rotation=0.0
+				
 		'Reset
 		Self.Reset()
+		Self.Enabled=False
 	End Method
 	
 End Class

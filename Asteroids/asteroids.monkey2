@@ -1,10 +1,12 @@
 'Source
 #Import "src/particles"
 #Import "src/font"
+#Import "src/timer"
 #Import "src/state/game"
 #Import "src/state/title"
 #Import "src/entity/object"
 #Import "src/entity/vector"
+#Import "src/entity/ship"
 #Import "src/entity/player"
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
@@ -19,6 +21,7 @@
 #Import "assets/snd/explode1.wav"
 #Import "assets/snd/explode2.wav"
 #Import "assets/snd/explode3.wav"
+#Import "assets/snd/levelup.wav"
 
 'System
 #Import "<std>"
@@ -31,6 +34,8 @@ Using wdw.game2d
 'Game states
 Const TITLE_STATE:Int = 0
 Const GAME_STATE:Int = 1
+
+Const MAX_LIVES:Int=3
 
 Function Main()
 	New AppInstance
@@ -87,6 +92,7 @@ Class AsteroidsGame Extends Game2d
 		AddSound("Explode1","asset::explode1.wav")
 		AddSound("Explode2","asset::explode2.wav")
 		AddSound("Explode3","asset::explode3.wav")
+		AddSound("LevelUp","asset::levelup.wav")
 		
 		'Create states
 		AddState( New TitleState,TITLE_STATE )
@@ -96,7 +102,7 @@ Class AsteroidsGame Extends Game2d
 	End Method
 	
 	Method OnRestartGame:Void() Override
-		EnterState( TITLE_STATE,New TransitionFadein,New TransitionFadeout )
+		EnterState(TITLE_STATE,New TransitionFadein,New TransitionFadeout)
 	End Method
 	
 End Class
