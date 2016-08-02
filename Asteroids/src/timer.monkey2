@@ -16,10 +16,12 @@ Public
 	Field Interval:Int=50 
 	Field Enabled:Bool=True
 	Field Elapsed:Bool=False
+	Field Loop:Bool=False
 	
-	Method New(interval:Int,enabled:Bool=True)
+	Method New(interval:Int,enabled:Bool=True,loop:Bool=False)
 		Self.Interval=interval
 		Self.Enabled=enabled
+		Self.Loop=loop
 		Timers.Add(Self)
 	End Method
 	

@@ -1,7 +1,14 @@
 
 Class TitleState Extends State
 
-	Method New()	
+Private
+	Field _flashCounterTimer:CounterTimer
+	Field _showPlayMessage:Bool=True
+Public
+
+	Method New()
+		'Initialise
+		_flashCounterTimer=New CounterTimer(25)	
 	End
 
 	Method Enter:Void() Override
@@ -13,28 +20,25 @@ Class TitleState Extends State
 	End
 	
 	Method Update:Void() Override
+		'Update
+		UpdateCounterTimers()
+		
+		'Validate
+		If (_flashCounterTimer.Elapsed)
+			_flashCounterTimer.Reset()
+			_showPlayMessage=Not _showPlayMessage
+		End
+		
 		'Start game?
-		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE")) GAME.EnterState( GAME_STATE, New TransitionFadein, New TransitionFadeout )
+		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE")) GAME.EnterState(GAME_STATE,New TransitionFadein,New TransitionFadeout)		
 	End
 
 	Method Render:Void(canvas:Canvas, tween:Double) Override
 		'Logo
 		canvas.DrawImage(GetImage("Logo"),GAME.Width/2,0)
 
-
-		'canvas.Color = Color.White
-		'Game.DrawText(canvas, "HIGH SCORE",0,1)
-		'Game.DrawText(canvas, "000000",0,15)
-		'Game.DrawText(canvas, "GRID WARS", 0, Game.Height/2)
-
-		'canvas.Color = Color.Red
-		VectorFont.DrawFont(canvas,"PRESS FIRE TO PLAY",Game.Width/2-(225/2),Game.Height-60,2.5)
-		'Print "Length:"+VectorFont.Length(18,2.5)
-		
-		'Game.DrawText(canvas, "Press FIRE to Play!",0,Game.Height-30)
-
-		'canvas.Color = Color.Green
-		'Game.DrawText(canvas, "[ESCAPE] for main menu",0,Game.Height-15)
+		'Message
+		If (_showPlayMessage) VectorFont.DrawFont(canvas,"PRESS FIRE TO PLAY",Game.Height-40,1.8)
 		
 	End
 	

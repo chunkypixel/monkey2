@@ -14,8 +14,7 @@ Private
 	Field _points:ParticlePoint[]
 	Field _index:Int=0
 Public
-	Field Alpha:Float=1.0
-	
+
 	Method New()
 		'Initialise
 		_points=New ParticlePoint[NumParticles]		
@@ -24,10 +23,9 @@ Public
 	
 	Method CreateParticles:Void(x:Int,y:Int,type:Int=0,particles:Int=32)
 		'Prepare
-		Local r:Int=Rnd(0,4)*64
-		Local g:Int=Rnd(0,4)*64
-		Local b:Int=Rnd(0,4)*64
-
+		Local r:Int=128+Rnd(0,64)
+		Local g:Int=r
+		Local b:Int=r
 		'Create
 		Self.CreateParticles(x,y,type,r,g,b,particles)	
 	End
@@ -52,11 +50,6 @@ Public
 		'Create
 		For Local t:Int=0 Until particles
 			'Prepare
-			'Orange/Yellow
-			'Local r:Int=255-Rnd(0,32)
-			'Local g:Int=64+Rnd(0,128)
-			'Local b:Int=0
-			'Grey
 			Local r:Int=128+Rnd(0,64)
 			Local g:Int=r
 			Local b:Int=r
@@ -76,7 +69,7 @@ Public
 			Self.Create(x,y,ParticleType.Explosion,r,g,b)		
 		Next	
 	End Method
-	
+		
 	Method Update:Void()
 		'Process
 		For Local t:Int=0 To NumParticles-1
@@ -107,7 +100,7 @@ Public
 		'canvas.TextureFilteringEnabled=True
 		'canvas.BlendMode=BlendMode.Additive
 		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
-		
+
 		'Get image
 		Local image:=GetImage("Particle")
 		
@@ -118,15 +111,19 @@ Public
 				r=Min(_points[t].r*1.25,255.0)
 				g=Min(_points[t].g*1.25,255.0)
 				b=Min(_points[t].b*1.25,255.0)
-				canvas.Color=GetColor(r,g,b)
 				
 				'Draw (line)
-				canvas.LineWidth=2.0
-				canvas.Alpha=Self.Alpha-0.2	'0.8
+				canvas.Color=GetColor(r,g,b,0.8)	
 				canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)				
+				
 				'Draw (image)
-				canvas.Alpha=0.25
-				If (image<>Null) canvas.DrawImage(image,_points[t].x+_points[t].dx*1.0,_points[t].y+_points[t].dy*1.0)						
+				If (image<>Null) 
+					'Sparkle
+					Local alpha:Float=0.25
+					If (_points[t].active>10) canvas.Alpha=Rnd(0.0,1.0)
+					canvas.Color=GetColor(r,g,b,alpha)
+					canvas.DrawImage(image,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)						
+				End
 			End	
 		Next
 		
@@ -141,6 +138,7 @@ Private
 	Method Create:Void(x:Float,y:Float,type:Int,r:Int,g:Int,b:Int,direction:Float=0.0)
 		'Prepare
 		Local distance:Float=1.0
+		Local length:Float=1.5
 				
 		'Set particle
 		_points[_index].x=x
@@ -161,7 +159,6 @@ Private
 				direction+=Rnd(-1,1)
 				_points[_index].dx=Cos(direction)
 				_points[_index].dy=Sin(direction)
-				'Reduce life
 				_points[_index].active/=2
 			Case ParticleType.Explosion
 				direction=Rnd(0,360)
@@ -171,8 +168,8 @@ Private
 		End
 		
 		'Finalise
-		_points[_index].dx=_points[_index].dx*1.5
-		_points[_index].dy=_points[_index].dy*1.5
+		_points[_index].dx=_points[_index].dx*length
+		_points[_index].dy=_points[_index].dy*length
 		_points[_index].x+=_points[_index].dx
 		_points[_index].y+=_points[_index].dy
 		
@@ -183,6 +180,9 @@ Private
 End Class
 
 Struct ParticlePoint
+Private
+	Field _angle:Float=0.0
+public
 	Field x:Float=0.0
 	Field y:Float=0.0
 	Field dx:Float=0.0
@@ -192,13 +192,21 @@ Struct ParticlePoint
 	Field b:Float=0
 	Field active:Int=0
 	Field decay:Float=0.95
-	
+	Field spin:Float=0.0
+
 	Method Update:Void()
 		'Update
 		x+=dx
 		y+=dy
 		dx*=decay
 		dy*=decay
+		
+		'Spin?
+		If (spin<>0.0)
+			_angle=(_angle+spin) Mod 360
+			'dx=Cos(_angle)*5.0+x
+			'dy=Sin(_angle)*5.0+y
+		End
 		
 		'Validate
 		If (x<-5) x=GAME.Width+5

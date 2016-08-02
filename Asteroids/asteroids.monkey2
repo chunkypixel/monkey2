@@ -1,4 +1,5 @@
 'Source
+#Import "src/settings"
 #Import "src/particles"
 #Import "src/font"
 #Import "src/timer"
@@ -10,6 +11,7 @@
 #Import "src/entity/player"
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
+#Import "src/entity/debris"
 'Assets (gfx)
 #Import "assets/gfx/arcade.ttf"
 #Import "assets/gfx/logo.png"
@@ -35,7 +37,6 @@ Using wdw.game2d
 Const TITLE_STATE:Int = 0
 Const GAME_STATE:Int = 1
 
-Const MAX_LIVES:Int=3
 
 Function Main()
 	New AppInstance
@@ -97,8 +98,7 @@ Class AsteroidsGame Extends Game2d
 		'Create states
 		AddState( New TitleState,TITLE_STATE )
 		AddState( New GameState,GAME_STATE )
-		Self.EnterTransition=New TransitionFadein
-		
+		Self.EnterTransition=New TransitionFadein		
 	End Method
 	
 	Method OnRestartGame:Void() Override
@@ -107,9 +107,14 @@ Class AsteroidsGame Extends Game2d
 	
 End Class
 
+Function GetAlpha:Float()
+	Local alpha:Float=0.8
+	If (VECTOR_FLICKER) alpha=Rnd(0.4,0.8)
+	Return alpha
+End Function
 
-Function GetColor:Color(red:Float,green:Float,blue:Float)
-	Return New Color(red/255,green/255,blue/255)
+Function GetColor:Color(red:Float,green:Float,blue:Float,alpha:Float=1.0)
+	Return New Color(red/255,green/255,blue/255,alpha)
 End Function
 
 Function SetImageHandle:Void(name:String,handle:Vec2f)
@@ -117,7 +122,15 @@ Function SetImageHandle:Void(name:String,handle:Vec2f)
 	If (image<>Null) image.Handle=handle
 End Function
 
-Function PlaySound:Void(name:String,volume:Float,loop:Int)
+Function ClearEntityGroup:Void(name:String)
+	Local group:=GetEntityGroup(name)
+	If (group<>Null)
+		For Local entity:=Eachin group.Entities
+			RemoveEntity(entity)
+		End
+	End
+End Function
 
+Function PlaySound:Void(name:String,volume:Float,loop:Int)
 End
 

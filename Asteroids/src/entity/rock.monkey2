@@ -14,8 +14,7 @@ Public
 	
 	Method New(position:Vec2f,size:Int,direction:Int,speed:Float)
 		'Create
-		Self.Initialise(size,direction,speed)
-		
+		Self.Initialise(size,direction,speed)	
 		'Position
 		Self.ResetPosition(position.X, position.Y)
 	End

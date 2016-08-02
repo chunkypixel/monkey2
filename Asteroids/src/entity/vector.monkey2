@@ -7,16 +7,14 @@ Private
 	Field _currentScale:Vec2f
 	Field _currentRotation:Float
 Public
-	Field PointColor:Color
 	Field Speed:Float=0.0
 	
 	Method New()
 		'Initialise
 		Self.BlendMode=BlendMode.Additive
+		Self.Color=GetColor(140,140,140)
 		_renderPoints=New VectorPoint[20]	
 		_basePoints=New VectorPoint[20]	
-		Self.Color=Color.FromARGB($A0A0A088)
-		Self.PointColor=Color.FromARGB($C0C0C088)
 	End Method
 	
 	Property RenderPoints:VectorPoint[]()
@@ -50,7 +48,7 @@ Public
 		If (Self.X>GAME.Width+5) Self.ResetPosition(-5,Self.Y)
 		If (Self.Y<-5) Self.ResetPosition(Self.X,GAME.Height+5)
 		If (Self.Y>GAME.Height+5) Self.ResetPosition(Self.X,-5)
-
+		
 		'Validate
 		If (_currentScale.X<>Self.Scale.X Or _currentScale.Y<>Self.Scale.Y Or _currentRotation<>Self.Rotation)
 			'Plot
@@ -69,7 +67,7 @@ Public
 		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
 		'canvas.TextureFilteringEnabled=True
 		'canvas.BlendMode=BlendMode.Additive	'Self.BlendMode	
-		canvas.LineWidth=2.5	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=1.8	'For now make all lines >1.0 for smoothing
 				
 		'Prepare
 		Local dx:Float=_renderPoints[0].x+Self.X
@@ -78,9 +76,9 @@ Public
 		'Process
 		For Local index:Int=1 Until _points
 			'Render
-			canvas.Color=Self.Color
+			canvas.Alpha=GetAlpha()
 			canvas.DrawLine(dx,dy,_renderPoints[index].x+Self.X,_renderPoints[index].y+Self.Y)
-			'canvas.Color=Self.PointColor
+			canvas.Alpha=0.8
 			canvas.DrawPoint(Int(dx),Int(dy))
 			'Update
 			dx=_renderPoints[index].x+Self.X

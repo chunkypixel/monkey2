@@ -27,7 +27,7 @@ Public
 		Self.Initialise()
 		
 		'Counter
-		_explodingCounterTimer=New CounterTimer(150,False)
+		_explodingCounterTimer=New CounterTimer(200,False)
 	End
 	
 	Method Reset:Void() Override
@@ -39,6 +39,11 @@ Public
 		Self.Visible=False
 		Self.ResetPosition(GAME.GameResolution.X/2,GAME.GameResolution.Y/2)	
 		_velocity=New Vec2f()	
+		
+		'DebugStop()
+		
+		'Remove 
+		ClearEntityGroup("debris")
 	End
 	
 	Method Update:Void() Override
@@ -140,7 +145,7 @@ Public
 					Local rock:=Cast<RockEntity>(entity)
 					If (rock.CheckCollision(Self)) 
 						'Explode (and shake)
-						Self.State.CreateExplosion(Self.Position)
+						Self.State.CreateShipExplosion(Self.Position)
 						Self.State.Shake(10)
 						
 						'Split

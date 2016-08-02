@@ -9,15 +9,17 @@ Public
 	Method New()
 		Self.Initialise()
 	End Method 
-
+	
+	Method DrawFont(canvas:Canvas,text:String,y:Float,scale:Float)
+		Local textLength:Float=Self.Length(text.Length,scale)
+		Self.DrawFont(canvas,text,GAME.Width/2-textLength/2,y,scale)
+	End
+	
 	Method DrawFont:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
 		'Canvas
-		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
-		'canvas.TextureFilteringEnabled=False
-		'canvas.BlendMode=BlendMode.Alpha	'Self.BlendMode	
-		canvas.LineWidth=1.5	'For now make all lines >1.0 for smoothing
-		canvas.Color=Color.White
-		
+		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.Color=GetColor(224,224,224,GetAlpha())
+
 		'Make uppercase (for now)
 		text=text.ToUpper()
 		
@@ -37,9 +39,7 @@ Public
 		Next
 		
 		'Reset
-		canvas.Alpha=1.0
-		'canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
-		'canvas.LineWidth=1.0
+		canvas.Color=Color.White
 	End
 		
 	Method Length:Float(chars:Int,scale:Float)

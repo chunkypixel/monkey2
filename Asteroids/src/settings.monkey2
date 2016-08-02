@@ -1,0 +1,5 @@
+
+Global MAX_LIVES:Int=3
+Global VECTOR_FLICKER:Bool=True
+Global BACKGROUND_IMAGE:Bool=True
+Global SHAKE_ON_EXPLOSION:Bool=True

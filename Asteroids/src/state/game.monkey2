@@ -2,7 +2,7 @@ Const LAYER_CAMERA:Int=0
 Const LAYER_ROCKS:Int=1
 Const LAYER_BULLETS:Int=2
 Const LAYER_PLAYER:Int=3
-Const LAYER_PARTICLES:Int=4
+Const LAYER_DEBRIS:Int=4
 
 Enum GameStateFlags
 	GetReady=0
@@ -80,7 +80,7 @@ Public
 					Self.GameState=GameStateFlags.GameOver
 					_stateCounterTimer.Reset()				
 				End
-				
+								
 			Case GameStateFlags.GameOver
 				'Exit game?
 				If (_stateCounterTimer.Elapsed) 
@@ -98,25 +98,23 @@ Public
 		canvas.TextureFilteringEnabled=True
 		canvas.BlendMode=BlendMode.Additive
 
-		'Background
-		Local background:=GetImage("Background")
-		If (background<>Null) canvas.DrawImage(background,GAME.Width/2,GAME.Height/2)	
-		'Entities
+		'Background?
+		If (BACKGROUND_IMAGE)
+			Local background:=GetImage("Background")
+			If (background<>Null) canvas.DrawImage(background,GAME.Width/2,GAME.Height/2)	
+		End
+		
+		'Entities and particles
 		Super.Render(canvas,tween)
 		_particles.Render(canvas)
 
 		'Messages
 		Select Self.GameState
 			Case GameStateFlags.GetReady
-				VectorFont.DrawFont(canvas,"GET READY",GAME.Width/2-(126/2),150,2.8)
-				
-			Case GameStateFlags.Play
-				'Debug (exclusion zone)
-				'canvas.Color=Color.FromARGB($44444422)
-				'canvas.DrawRect(GAME.Width/2-100,GAME.Height/2-100,200,200)
+				VectorFont.DrawFont(canvas,"GET READY",150,2.8)
 				
 			Case GameStateFlags.GameOver
-				VectorFont.DrawFont(canvas,"GAME OVER",GAME.Width/2-(126/2),150,2.8)
+				VectorFont.DrawFont(canvas,"GAME OVER",150,2.8)
 		End
 		
 		'Reset
@@ -168,7 +166,7 @@ Public
 	End Method
 			
 	Method Shake:Void(radius:Float=2)
-		_camera.Shake(radius)
+		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius)
 	End Method
 
 	Method InExclusionZone:Bool(entity:Entity)
@@ -185,7 +183,13 @@ Public
 	Method CreateExplosion:Void(position:Vec2f)
 		_particles.CreateExplosion(position.X,position.Y)
 	End Method
-
+	Method CreateShipExplosion:Void(position:Vec2f)
+		For Local count:Int = 0 Until 10
+			Local debris:=New DebrisEntity(position,Rnd(0,360))
+			AddEntity(debris,LAYER_DEBRIS,"debris")
+		Next
+		
+	End Method
 'Rocks
 	Method CreateRock:Void(position:Vec2f,size:Int,direction:Int,speed:Float,enabled:Bool=True)
 		Local rock:=New RockEntity(position,size,direction,speed)
