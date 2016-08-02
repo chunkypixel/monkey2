@@ -1,8 +1,10 @@
 'Source
 #Import "src/settings"
 #Import "src/particles"
+#Import "src/thump"
 #Import "src/font"
 #Import "src/timer"
+#Import "src/state/base"
 #Import "src/state/game"
 #Import "src/state/title"
 #Import "src/entity/object"
@@ -24,6 +26,8 @@
 #Import "assets/snd/explode2.wav"
 #Import "assets/snd/explode3.wav"
 #Import "assets/snd/levelup.wav"
+#Import "assets/snd/thumphi.wav"
+#Import "assets/snd/thumplo.wav"
 
 'System
 #Import "<std>"
@@ -94,6 +98,8 @@ Class AsteroidsGame Extends Game2d
 		AddSound("Explode2","asset::explode2.wav")
 		AddSound("Explode3","asset::explode3.wav")
 		AddSound("LevelUp","asset::levelup.wav")
+		AddSound("ThumpHi","asset::thumphi.wav")
+		AddSound("ThumpLo","asset::thumplo.wav")
 		
 		'Create states
 		AddState( New TitleState,TITLE_STATE )

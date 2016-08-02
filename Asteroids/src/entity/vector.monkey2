@@ -64,9 +64,6 @@ Public
 		If (Not Self.Enabled Or Not Self.Visible) Return
 		
 		'Canvas
-		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
-		'canvas.TextureFilteringEnabled=True
-		'canvas.BlendMode=BlendMode.Additive	'Self.BlendMode	
 		canvas.LineWidth=1.8	'For now make all lines >1.0 for smoothing
 				
 		'Prepare
@@ -76,7 +73,7 @@ Public
 		'Process
 		For Local index:Int=1 Until _points
 			'Render
-			canvas.Alpha=GetAlpha()
+			canvas.Alpha=GetAlpha()	'Flicker
 			canvas.DrawLine(dx,dy,_renderPoints[index].x+Self.X,_renderPoints[index].y+Self.Y)
 			canvas.Alpha=0.8
 			canvas.DrawPoint(Int(dx),Int(dy))
@@ -86,10 +83,7 @@ Public
 		Next
 		
 		'Reset
-		canvas.Alpha=1.0
 		canvas.Color=Color.White
-		'canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
-		'canvas.LineWidth=1.0
 	End Method
 	
 	Method CheckCollision:Bool(entity:Entity) Override

@@ -71,7 +71,7 @@ Public
 		
 		'Draw (glow)
 		Local image:=GetImage("Particle")
-		canvas.Alpha=Rnd(0.4,0.8)	'Flicker
+		canvas.Alpha=GetAlpha()	'Flicker
 		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.5,0.5))						
 		
 		'Reset

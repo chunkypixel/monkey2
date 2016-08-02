@@ -2,7 +2,8 @@
 Enum PlayerStateFlags
 	Release=1
 	Active=2
-	Exploding=3
+	Complete=3
+	Exploding=4
 End
 
 Class PlayerEntity Extends ShipEntity
@@ -15,7 +16,7 @@ Class PlayerEntity Extends ShipEntity
 Private
 	Field _velocity:=New Vec2f
 	Field _thrustChannel:Channel
-	Field _explodingCounterTimer:CounterTimer
+	Field _counterTimer:CounterTimer
 Public
 	Field Lives:Int=MAX_LIVES
 	Field Score:Int=0
@@ -27,7 +28,7 @@ Public
 		Self.Initialise()
 		
 		'Counter
-		_explodingCounterTimer=New CounterTimer(200,False)
+		_counterTimer=New CounterTimer(200,False)
 	End
 	
 	Method Reset:Void() Override
@@ -39,9 +40,7 @@ Public
 		Self.Visible=False
 		Self.ResetPosition(GAME.GameResolution.X/2,GAME.GameResolution.Y/2)	
 		_velocity=New Vec2f()	
-		
-		'DebugStop()
-		
+				
 		'Remove 
 		ClearEntityGroup("debris")
 	End
@@ -75,12 +74,15 @@ Public
 						Local rock:=Cast<RockEntity>(entity)
 						rock.Enabled=True
 					Next
-					
+										
 					'Remove life
 					Self.Lives-=1
 				End
 				
 			Case PlayerStateFlags.Active
+				'Sound
+				If (Not Self.State.Thump.Running) Self.State.Thump.Start()
+					
 				'Rotation
 				If (KeyboardControlDown("LEFT")) Self.Rotation+=3
 				If (KeyboardControlDown("RIGHT")) Self.Rotation-=3
@@ -145,6 +147,7 @@ Public
 					Local rock:=Cast<RockEntity>(entity)
 					If (rock.CheckCollision(Self)) 
 						'Explode (and shake)
+						Self.State.CreateExplosion(Self.Position)
 						Self.State.CreateShipExplosion(Self.Position)
 						Self.State.Shake(10)
 						
@@ -153,20 +156,42 @@ Public
 	
 						'Sound
 						PlaySound("Explode1")
+						Self.State.Thump.Stop()
 					
 						'Set
 						Self.PlayerState=PlayerStateFlags.Exploding
 						Self.Visible=False
-						_explodingCounterTimer.Reset()
+						_counterTimer.Reset()
+						Return
 					End
 				Next		
-			
+
+				'Level complete?
+				If (Self.State.TotalRocks=0) 
+					'Sound
+					PlaySound("LevelUp")
+					Self.State.Thump.Stop()
+
+					'Set
+					Self.PlayerState=PlayerStateFlags.Complete
+					_counterTimer.Reset()
+					return
+				End
+				
+			Case PlayerStateFlags.Complete
+				'Restart?
+				If (_counterTimer.Elapsed) 
+					'Set
+					Self.PlayerState=PlayerStateFlags.Active
+					Self.State.IncrementLevel() 			
+				End	
+						
 			Case PlayerStateFlags.Exploding	
 				'Finished?
 				If (Self.Lives=0) Self.Enabled=False
 				
 				'Restart?
-				If (_explodingCounterTimer.Elapsed) Self.Reset() 			
+				If (_counterTimer.Elapsed) Self.Reset() 			
 		End
 	End Method
 			

@@ -192,7 +192,6 @@ public
 	Field b:Float=0
 	Field active:Int=0
 	Field decay:Float=0.95
-	Field spin:Float=0.0
 
 	Method Update:Void()
 		'Update
@@ -200,14 +199,7 @@ public
 		y+=dy
 		dx*=decay
 		dy*=decay
-		
-		'Spin?
-		If (spin<>0.0)
-			_angle=(_angle+spin) Mod 360
-			'dx=Cos(_angle)*5.0+x
-			'dy=Sin(_angle)*5.0+y
-		End
-		
+				
 		'Validate
 		If (x<-5) x=GAME.Width+5
 		If (x>GAME.Width+5) x=-5

@@ -10,7 +10,7 @@ Enum GameStateFlags
 	GameOver=2
 End
 
-Class GameState Extends State
+Class GameState Extends BaseState
 
 Private
 	Field _particles:ParticleManager
@@ -22,14 +22,16 @@ Private
 Public
 	Field Player:PlayerEntity
 	Field GameState:GameStateFlags
+	Field Thump:ThumpSound
 		
 	Method Enter:Void() Override
 		'Create/reset stuff
 		_maxRocks=4
 			
 		'Initialise
-		InitialisePlayer()
-		CreateRocks()
+		Self.CreatePlayer()
+		Self.CreateRocks()
+		Self.CreateThump()
 		_particles=New ParticleManager()
 		_shipLives=New ShipEntity()
 		
@@ -53,14 +55,18 @@ Public
 		'Tidup/save stuff
 		_particles=Null
 		_shipLives=Null
+		Self.Thump=Null
 		Self.Player=Null
 		RemoveAllEntities()
 	End Method
 
-	Method Update:Void() Override		
+	Method Update:Void() Override	
+		'Base
+		Super.Update()
+			
 		'Update
 		_particles.Update()
-		UpdateCounterTimers()
+		Self.Thump.Update()
 		
 		'Validate
 		Select Self.GameState
@@ -72,9 +78,6 @@ Public
 				End
 				
 			Case GameStateFlags.Play
-				'Level complete?
-				If (Self.TotalRocks=0) Self.LevelUp()
-				
 				'Game over?
 				If (Not Self.Player.Enabled) 
 					Self.GameState=GameStateFlags.GameOver
@@ -94,6 +97,9 @@ Public
 	'End Method
 	
 	Method Render:Void(canvas:Canvas,tween:Double) Override
+		'Base
+		Super.Render(canvas,tween)
+		
 		'Prepare
 		canvas.TextureFilteringEnabled=True
 		canvas.BlendMode=BlendMode.Additive
@@ -126,7 +132,10 @@ Public
 		canvas.ClearMatrix()
 		canvas.Color=Color.White
 
-		'Score 1
+		'Base
+		Super.PostRender(canvas,tween)
+		
+		'Score
 		Local score:String="0"
 		If (Player.Score>0) score=Player.Score
 		score="        "+score
@@ -134,14 +143,12 @@ Public
 		'Length 12.5 - 2.5
 		
 		'High
-		Local highScore:String="0"
-		If (Player.Score>_highScore) _highScore=Player.Score
+		Local highScore:String="10000"
 		If (_highScore>0) highScore=_highScore
 		highScore="        "+highScore
 		VectorFont.DrawFont(canvas,highScore.Right(8),332-60,10,1.5)
 		VectorFont.DrawFont(canvas,"MKS",340,10,1.5)
 		'Length 7.5 - 1.5
-		'Print "Length:"+VectorFont.Length(7,1.5)
 
 		'Lives?
 		Local lives:Int=Clamp(Self.Player.Lives,0,7)
@@ -157,12 +164,28 @@ Public
 			Next
 		End
 		
+		'Thump
+		Self.Thump.Render(canvas)
+		
 		'Message
 		'VectorFont.DrawFont(canvas,"YOUR SCORE IS ONE OF THE TEN BEST",34,120,2.8)
 		'VectorFont.DrawFont(canvas,"PLEASE ENTER YOUR INITIALS",34,140,2.8)
 		'VectorFont.DrawFont(canvas,"PUSH ROTATE TO SELECT LETTER",34,160,2.8)
 		'VectorFont.DrawFont(canvas,"PUSH HYPERSPACE WHEN LETTER IS CORRECT",34,180,2.8)
 		
+	End Method
+
+'Features (General)
+	Method IncrementLevel:Void()
+		'Rocks start at 4 and increment 2 each level until a max of 11
+
+		'Increment
+		Self.Player.Level+=1
+		_maxRocks+=2
+		_maxRocks=Min(_maxRocks,11)
+		
+		'Restart
+		Self.CreateRocks(True)
 	End Method
 			
 	Method Shake:Void(radius:Float=2)
@@ -205,8 +228,8 @@ Public
 		'Can split?
 		If (rock.Size<RockSize.Small)
 			For Local count:Int=1 To 2
-				'Validate
-				If (Self.TotalRocks>26) Continue 
+				'Validate (allow exiting block to process if at limit)
+				If (count>1 And Self.TotalRocks>=26) Continue 
 
 				'Direction (seperate) 
 				Local direction:Int=rock.Direction
@@ -235,7 +258,30 @@ Public
 		If (group=Null) Return 0 
 		Return group.Entities.Count()
 	End
-
+	
+	Property PotentialRocks:Int()
+		'Validate
+		Local group:=GetEntityGroup("rocks")
+		If (group=Null) Return 0 
+		
+		'Process
+		Local count:Int=0
+		For Local entity:=Eachin group.Entities
+			Local rock:=Cast<RockEntity>(entity)
+			Select rock.Size
+				Case RockSize.Big
+					count+=7
+				Case RockSize.Medium
+					count+=3
+				Case RockSize.Small
+					count+=1
+			End
+		Next
+			
+		'Return
+		Return count
+	End
+	
 'Bullets
 	Property TotalBullets:Int()
 		Local group:=GetEntityGroup("bullets")
@@ -244,7 +290,7 @@ Public
 	End
 	
 Private
-	Method InitialisePlayer:Void()
+	Method CreatePlayer:Void()
 		Player=New PlayerEntity()
 		Player.State=Self
 		AddEntity(Player,LAYER_PLAYER)
@@ -270,22 +316,11 @@ Private
 			'Increment
 			counter+=1
 		Until (counter=_maxRocks)
-	End Method
-
-	Method LevelUp:Void()
-		'Rocks start at 4 and increment 2 each level until a max of 11
-
-		'Increment
-		Self.Player.Level+=1
-		_maxRocks+=2
-		_maxRocks=Min(_maxRocks,11)
-		
-		'Restart
-		Self.CreateRocks(True)
-
-		'Sound
-		local channel:=PlaySound("LevelUp")
-		channel.Volume=1.0
+	End Method	
+	
+	Method CreateThump:Void()
+		Self.Thump=New ThumpSound()	
+		Self.Thump.State=Self
 	End Method
 	
 End Class

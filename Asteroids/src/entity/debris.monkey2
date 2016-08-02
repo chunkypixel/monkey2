@@ -30,9 +30,9 @@ Private
 		Self.AddPoint(1,Int(Rnd(4,10)))
 		
 		'Other
-		Self.Speed=Rnd(0.5,1.5)
+		Self.Speed=Rnd(0.5,1.25)
 		Self.Direction=direction
-		_rotationSpeed=Rnd(-2,Rnd(2,8))	
+		_rotationSpeed=Rnd(-2,Rnd(4,10))	
 		'Self.Scale=New Vec2f(1.0,1.0)	
 	End Method
 	
