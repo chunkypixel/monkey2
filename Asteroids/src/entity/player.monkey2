@@ -79,10 +79,33 @@ Public
 					Self.Lives-=1
 				End
 				
-			Case PlayerStateFlags.Active
-				'Sound
-				If (Not Self.State.Thump.Running) Self.State.Thump.Start()
-					
+			Case PlayerStateFlags.Active,PlayerStateFlags.Complete	
+				'Validate
+				Select Self.PlayerState
+					Case PlayerStateFlags.Active
+						'Sound
+						If (Not Self.State.Thump.Running) Self.State.Thump.Start()
+						
+						'Level complete?
+						If (Self.State.TotalRocks=0) 
+							'Sound
+							PlaySoundEffect("LevelUp",1.0,2.0)
+							Self.State.Thump.Stop()
+		
+							'Set
+							Self.PlayerState=PlayerStateFlags.Complete
+							_counterTimer.Reset()						
+						End
+				
+					Case PlayerStateFlags.Complete
+						'Restart?
+						If (_counterTimer.Elapsed) 
+							'Set
+							Self.PlayerState=PlayerStateFlags.Active
+							Self.State.IncrementLevel() 			
+						End	
+				End
+				
 				'Rotation
 				If (KeyboardControlDown("LEFT")) Self.Rotation+=3
 				If (KeyboardControlDown("RIGHT")) Self.Rotation-=3
@@ -112,11 +135,11 @@ Public
 					'Thrust trail
 					Self.State.CreateTrail(Self.Position,Self.Rotation-180)
 					
-					'Play sound?
-					'If (_thrustChannel=Null Or (_thrustChannel<>Null And Not _thrustChannel.Playing)) _thrustChannel=PlaySound("Thrust",-1)
+					'Play?
+					If (_thrustChannel.Paused) _thrustChannel.Paused=False
 				Else
-					'Stop sound?
-					If (_thrustChannel<>Null) _thrustChannel.Stop()
+					'Stop?
+					 _thrustChannel.Paused=True
 				End
 				
 				'Fire?
@@ -130,8 +153,7 @@ Public
 						AddEntityToGroup(bullet,"bullets")
 						
 						'Sound
-						Local channel:=PlaySound("Fire")
-						channel.Volume=0.35
+						PlaySoundEffect("Fire")
 					End
 				End
 				
@@ -155,37 +177,17 @@ Public
 						Self.State.SplitRock(rock)
 	
 						'Sound
-						PlaySound("Explode1")
+						PlaySoundEffect("Explode1",0.50)
 						Self.State.Thump.Stop()
-					
+						_thrustChannel.Paused=True
+						
 						'Set
 						Self.PlayerState=PlayerStateFlags.Exploding
 						Self.Visible=False
 						_counterTimer.Reset()
-						Return
 					End
 				Next		
-
-				'Level complete?
-				If (Self.State.TotalRocks=0) 
-					'Sound
-					PlaySound("LevelUp")
-					Self.State.Thump.Stop()
-
-					'Set
-					Self.PlayerState=PlayerStateFlags.Complete
-					_counterTimer.Reset()
-					return
-				End
 				
-			Case PlayerStateFlags.Complete
-				'Restart?
-				If (_counterTimer.Elapsed) 
-					'Set
-					Self.PlayerState=PlayerStateFlags.Active
-					Self.State.IncrementLevel() 			
-				End	
-						
 			Case PlayerStateFlags.Exploding	
 				'Finished?
 				If (Self.Lives=0) Self.Enabled=False
@@ -207,6 +209,10 @@ Private
 		'Reset
 		Self.Reset()
 		Self.Enabled=False
+		
+		'Thrust
+		_thrustChannel=PlaySoundEffect("Thrust",0.50,1.0,True)
+		_thrustChannel.Paused=True
 	End Method
 	
 End Class

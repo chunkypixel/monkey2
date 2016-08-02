@@ -137,6 +137,10 @@ Function ClearEntityGroup:Void(name:String)
 	End
 End Function
 
-Function PlaySound:Void(name:String,volume:Float,loop:Int)
+Function PlaySoundEffect:Channel(name:String,volume:Float=0.25,rate:Float=1.0,loop:Bool=False)
+	Local channel:=GAME.PlaySound(name,loop)
+	channel.Volume=volume
+	channel.Rate=rate
+	Return channel
 End
 

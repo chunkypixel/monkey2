@@ -56,7 +56,7 @@ Public
 				Self.State.SplitRock(rock)
 				
 				'Sound
-				PlaySound("Explode2")	'"+Int(Rnd(1,4)))
+				PlaySoundEffect("Explode"+Int(Rnd(1,4)))
 
 				'Finalise				
 				RemoveEntity(Self)

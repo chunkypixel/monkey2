@@ -28,7 +28,7 @@ Public
 	
 	Method PostRender:Void(canvas:Canvas,tween:Double) Override
 		'Message
-		VectorFont.DrawFont(canvas,"ASTEROIDS BY MONKEY2",GAME.Height-20,1.0)		
+		VectorFont.DrawFont(canvas,"ASTEROIDS BY ATARI",GAME.Height-20,1.0)		
 	End
 	
 End Class

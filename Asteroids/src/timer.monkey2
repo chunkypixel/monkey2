@@ -48,4 +48,8 @@ Public
 	Method Stop:Void()
 		Self.Enabled=False
 	End
+	
+	Property Counter:Int()
+		Return _counter
+	End
 End Class

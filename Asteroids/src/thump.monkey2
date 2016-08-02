@@ -62,8 +62,7 @@ Private
 		If (potentialRocks<=15)	_delay.Interval=(COUNTER_START-(15-potentialRocks)*2)			
 		
 		'Sound
-		_channel=PlaySound(name)
-		_channel.Volume=0.20
+		_channel=PlaySoundEffect(name)
 		_channel.Rate=_rate
 		
 		'Start

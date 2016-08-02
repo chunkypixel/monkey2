@@ -4,7 +4,7 @@ Const LAYER_BULLETS:Int=2
 Const LAYER_PLAYER:Int=3
 Const LAYER_DEBRIS:Int=4
 
-Enum GameStateFlags
+Enum GameStatus
 	GetReady=0
 	Play=1
 	GameOver=2
@@ -17,11 +17,11 @@ Private
 	Field _camera:CameraEntity
 	Field _maxRocks:Int
 	Field _highScore:Int=0
-	Field _stateCounterTimer:CounterTimer
 	Field _shipLives:ShipEntity
+	Field _status:GameStatus=GameStatus.GetReady
+	Field _counterTimer:CounterTimer
 Public
 	Field Player:PlayerEntity
-	Field GameState:GameStateFlags
 	Field Thump:ThumpSound
 		
 	Method Enter:Void() Override
@@ -45,10 +45,8 @@ Public
 		_camera.SnapToTarget()
 		
 		'State
-		Self.GameState=GameStateFlags.GetReady
-		
-		'Counter
-		_stateCounterTimer=New CounterTimer(150)	
+		_status=GameStatus.GetReady
+		_counterTimer=New CounterTimer(150)	
 	End Method
 
 	Method Leave:Void() Override
@@ -69,24 +67,24 @@ Public
 		Self.Thump.Update()
 		
 		'Validate
-		Select Self.GameState
-			Case GameStateFlags.GetReady
+		Select _status
+			Case GameStatus.GetReady
 				'Start game?
-				If (_stateCounterTimer.Elapsed)	
-					Self.GameState=GameStateFlags.Play				
+				If (_counterTimer.Elapsed)	
+					_status=GameStatus.Play				
 					Self.Player.Enabled=True
 				End
 				
-			Case GameStateFlags.Play
+			Case GameStatus.Play
 				'Game over?
 				If (Not Self.Player.Enabled) 
-					Self.GameState=GameStateFlags.GameOver
-					_stateCounterTimer.Reset()				
+					_status=GameStatus.GameOver
+					_counterTimer.Reset()				
 				End
 								
-			Case GameStateFlags.GameOver
+			Case GameStatus.GameOver
 				'Exit game?
-				If (_stateCounterTimer.Elapsed) 
+				If (_counterTimer.Elapsed) 
 					GAME.EnterState(TITLE_STATE,New TransitionFadein,New TransitionFadeout)				
 				End
 		End
@@ -115,11 +113,11 @@ Public
 		_particles.Render(canvas)
 
 		'Messages
-		Select Self.GameState
-			Case GameStateFlags.GetReady
+		Select _status
+			Case GameStatus.GetReady
 				VectorFont.DrawFont(canvas,"GET READY",150,2.8)
 				
-			Case GameStateFlags.GameOver
+			Case GameStatus.GameOver
 				VectorFont.DrawFont(canvas,"GAME OVER",150,2.8)
 		End
 		
