@@ -47,16 +47,17 @@ Public
 		'Messages
 		Select _status
 			Case TitleStatus.Intro
-				VectorFont.DrawFont(canvas,"ASTEROIDS",150,2.2)	
-				VectorFont.DrawFont(canvas,"WRITTEN USING MONKEY2 AND THE GAME2D FRAMEWORK",200,2.0)	
-				VectorFont.DrawFont(canvas,"THANKS TO MARK SIBLY AND WIEBO DE WIT",220,1.5)	
-				VectorFont.DrawFont(canvas,"PARTICLE ENGINE AND VECTOR FONT BY MARK INCITTI",240,1.2)	
-
-				VectorFont.DrawFont(canvas,"BASED ON THE ORIGINAL ARCADE CLASSIC FROM ATARI",280,1.5)	
-				VectorFont.DrawFont(canvas,"SHOOT ASTEROIDS AND AVOID UFOS",300,1.2)	
+				VectorFont.DrawFont(canvas,"ASTEROIDS",220,2.2)	
+				VectorFont.DrawFont(canvas,"CHUNKYPIXEL STUDIOS 2017",240,1.2)	
 				
+				VectorFont.DrawFont(canvas,"BUILT WITH MONKEY2 AND THE GAME2D FRAMEWORK",270,1.5)	
+				VectorFont.DrawFont(canvas,"THANKS TO MARK SIBLY AND WIEBO DE WIT",290,1.2)	
+				VectorFont.DrawFont(canvas,"PARTICLE ENGINE AND VECTOR FONT BY MARK INCITTI",310,1.2)	
+
 			Case TitleStatus.Points
 				VectorFont.DrawFont(canvas,"SCORING",150,2.2)	
+				VectorFont.DrawFont(canvas,"SHOOT ASTEROIDS AND AVOID UFOS",170,1.2)	
+				
 				If (_stateCounterTimer.Counter>50)  VectorFont.DrawFont(canvas,"     20 POINTS",200,2.0)	
 				If (_stateCounterTimer.Counter>100) VectorFont.DrawFont(canvas,"     50 POINTS",240,2.0)	
 				If (_stateCounterTimer.Counter>150) VectorFont.DrawFont(canvas,"    100 POINTS",280,2.0)	
@@ -65,9 +66,10 @@ Public
 
 			Case TitleStatus.HighScores
 				VectorFont.DrawFont(canvas,"HIGH SCORES",150,2.2)	
+				
 				If (_stateCounterTimer.Counter>50)  VectorFont.DrawFont(canvas,"1,  10000 MKS",200,2.0)	
 				If (_stateCounterTimer.Counter>100) VectorFont.DrawFont(canvas,"2,   9000 MAK",220,2.0)	
-				If (_stateCounterTimer.Counter>150) VectorFont.DrawFont(canvas,"3,   8000 WEI",240,2.0)	
+				If (_stateCounterTimer.Counter>150) VectorFont.DrawFont(canvas,"3,   8000 WIE",240,2.0)	
 				If (_stateCounterTimer.Counter>200) VectorFont.DrawFont(canvas,"4,   7000 ATA",260,2.0)	
 				If (_stateCounterTimer.Counter>250) VectorFont.DrawFont(canvas,"5,   6000 COU",280,2.0)	
 				'Print "Length:"+VectorFont.Length(13,1.8)

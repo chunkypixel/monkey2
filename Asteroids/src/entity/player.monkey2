@@ -77,6 +77,9 @@ Public
 										
 					'Remove life
 					Self.Lives-=1
+					
+					'Sound
+					PlaySoundEffect("Appear",1.0)
 				End
 				
 			Case PlayerStateFlags.Active,PlayerStateFlags.Complete	

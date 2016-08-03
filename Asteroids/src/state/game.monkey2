@@ -162,9 +162,13 @@ Public
 			Next
 		End
 		
-		'Thump
-		Self.Thump.Render(canvas)
-		
+		'Level
+		Local level:String="0"+Self.Player.Level
+		VectorFont.DrawFont(canvas,level.Right(2),170,10,1.5)
+		'Remaining
+		Local remaining:String="0"+Self.PotentialRocks
+		VectorFont.DrawFont(canvas,remaining.Right(2),190,10,1.5)
+				
 		'Message
 		'VectorFont.DrawFont(canvas,"YOUR SCORE IS ONE OF THE TEN BEST",34,120,2.8)
 		'VectorFont.DrawFont(canvas,"PLEASE ENTER YOUR INITIALS",34,140,2.8)
@@ -277,7 +281,7 @@ Public
 		Next
 			
 		'Return
-		Return count
+		Return Min(99,count)
 	End
 	
 'Bullets
@@ -305,8 +309,8 @@ Private
 			If (Self.InExclusionZone(position)) Continue
 						
 			'Speed (increase base speed each level)
-			Local speed:Float=1.0+Min(Self.Player.Level*0.1,1.0)
-			If (Int(Rnd(0,2)>=1)) speed-=0.25	'Reduce some
+			Local speed:Float=0.75+Min(Self.Player.Level*0.1,1.0)
+			If (Int(Rnd(0,2)>=1)) speed-=0.35	'Reduce some
 			
 			'Create
 			Self.CreateRock(position,RockSize.Big,Rnd(360),speed,enabled)

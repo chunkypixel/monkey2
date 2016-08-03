@@ -20,6 +20,7 @@
 #Import "assets/gfx/particle.png"
 #Import "assets/gfx/background.png"
 'Assets (snd)
+#Import "assets/snd/appear.wav"
 #Import "assets/snd/fire.wav"
 #Import "assets/snd/thrust.wav"
 #Import "assets/snd/explode1.wav"
@@ -92,6 +93,7 @@ Class AsteroidsGame Extends Game2d
 		SetImageHandle("Background",New Vec2f(0.5,0.5))
 
 		'Add sounds
+		AddSound("Appear","asset::appear.wav")
 		AddSound("Fire","asset::fire.wav")
 		AddSound("Thrust","asset::thrust.wav")
 		AddSound("Explode1","asset::explode1.wav")

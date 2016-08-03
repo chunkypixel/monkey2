@@ -29,11 +29,6 @@ Public
 		End
 	End Method
 	
-	Method Render(canvas:Canvas)
-		VectorFont.DrawFont(canvas,"Delay:"+_delay.Interval,0,65,1.5)
-		VectorFont.DrawFont(canvas,"Poten:"+Self.State.PotentialRocks,0,80,1.5)
-	End
-	
 	Method Start:Void()
 		Self.Play()
 		_running=True
