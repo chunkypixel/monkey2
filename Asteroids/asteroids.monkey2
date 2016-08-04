@@ -1,5 +1,6 @@
 'Source
 #Import "src/settings"
+#Import "src/starfield"
 #Import "src/particles"
 #Import "src/thump"
 #Import "src/font"
@@ -42,6 +43,7 @@ Using wdw.game2d
 Const TITLE_STATE:Int = 0
 Const GAME_STATE:Int = 1
 
+Const TITLE:String="ASTEROIDS 2K"
 
 Function Main()
 	New AppInstance
@@ -52,7 +54,7 @@ End Function
 Class AsteroidsGame Extends Game2d
 
 	Method New(width:Int,height:int)
-		Super.New("Asteroids",width,height,WindowFlags.Resizable)
+		Super.New(TITLE,width,height,WindowFlags.Resizable)
 		
 		'Load settings
 		LoadSettings()

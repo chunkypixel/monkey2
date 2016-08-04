@@ -17,7 +17,7 @@ Private
 	Field _velocity:=New Vec2f
 	Field _thrustChannel:Channel
 	Field _counterTimer:CounterTimer
-	Field _playerState:Int	'PlayerStateFlags
+	Field _playerState:PlayerStateFlags
 	Field _levelComplete:Bool=False
 Public
 	Field Lives:Int=MAX_LIVES
@@ -168,14 +168,9 @@ Public
 		End
 	End Method
 		
-	Method Render:Void(canvas:Canvas) Override
-		Super.Render(canvas)
-		
-		'Debug
-		VectorFont.DrawFont(canvas,"L:"+Self.Lives,0,100,1.5)
-		VectorFont.DrawFont(canvas,"S:"+_playerState,0,115,1.5)
-		
-	End Method
+	'Method Render:Void(canvas:Canvas) Override
+	'	Super.Render(canvas)
+	'End Method
 		
 Private
 	Method Initialise() Override

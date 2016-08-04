@@ -23,7 +23,7 @@ Public
 
 		'Make uppercase (for now)
 		text=text.ToUpper()
-		
+				
 		'Process
 		For Local index:Int=0 Until text.Length
 			'Prepare
@@ -31,10 +31,9 @@ Public
 						
 			'Draw			
 			For Local point:Int=0 Until char.Points
-				canvas.DrawLine(char.RenderPoints[point].x1*scale+x+scale*5*index,
-									char.RenderPoints[point].y1*scale+y,
-									char.RenderPoints[point].x2*scale+x+scale*5*index,
-									char.RenderPoints[point].y2*scale+y)
+				Local v0:=New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)
+				Local v1:=New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)
+				canvas.DrawLine(v0,v1)				
 			Next
 			
 		Next
@@ -104,11 +103,11 @@ Private
 					_chars[t].AddPoint(2,2, 2,4)
 					_chars[t].AddPoint(1,3, 3,3)
 				Case 44	' ,
-					_chars[t].AddPoint(2,5, 2,6)
+					_chars[t].AddPoint(2,5, 1,6)
 				Case 45	' -
 					_chars[t].AddPoint(1,3, 3,3)
 				Case 46	' .
-					_chars[t].AddPoint(2,5, 2,5)
+					_chars[t].AddPoint(2,5, 2,6)
 				Case 47	' /
 					_chars[t].AddPoint(4,0, 0,6)
 				Case 48	' 0
@@ -533,7 +532,7 @@ Public
 		_renderPoints=New VectorChar[8]
 	End
 
-	Method AddPoint(x1:Int,y1:Int,x2:Int,y2:Int)
+	Method AddPoint(x1:Float,y1:Float,x2:Float,y2:Float)
 		_renderPoints[_points].x1=x1
 		_renderPoints[_points].y1=y1
 		_renderPoints[_points].x2=x2

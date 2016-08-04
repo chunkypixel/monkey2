@@ -73,7 +73,7 @@ Public
 		Local image:=GetImage("Particle")
 		canvas.Color=Self.Color
 		canvas.Alpha=GetAlpha()	'Flicker
-		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.5,0.5))						
+		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.25,0.25))						
 		
 		'Reset
 		canvas.Color=Color.White

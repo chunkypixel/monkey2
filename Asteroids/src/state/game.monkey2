@@ -27,6 +27,10 @@ Public
 	Method Enter:Void() Override
 		'Create/reset stuff
 		_maxRocks=4
+
+		'Starfield
+		Self.Starfield.Speed=0.05
+		Self.Starfield.Rotation=0.0
 			
 		'Initialise
 		Self.CreatePlayer()
@@ -95,20 +99,7 @@ Public
 	'Method PreRender:Void(canvas:Canvas,tween:Double) Override
 	'End Method
 	
-	Method Render:Void(canvas:Canvas,tween:Double) Override
-		'Base
-		Super.Render(canvas,tween)
-		
-		'Prepare
-		canvas.TextureFilteringEnabled=True
-		canvas.BlendMode=BlendMode.Additive
-
-		'Background?
-		If (BACKGROUND_IMAGE)
-			Local background:=GetImage("Background")
-			If (background<>Null) canvas.DrawImage(background,GAME.Width/2,GAME.Height/2)	
-		End
-		
+	Method Render:Void(canvas:Canvas,tween:Double) Override	
 		'Entities and particles
 		Super.Render(canvas,tween)
 		_particles.Render(canvas)
@@ -175,6 +166,8 @@ Public
 		'VectorFont.DrawFont(canvas,"PLEASE ENTER YOUR INITIALS",34,140,2.8)
 		'VectorFont.DrawFont(canvas,"PUSH ROTATE TO SELECT LETTER",34,160,2.8)
 		'VectorFont.DrawFont(canvas,"PUSH HYPERSPACE WHEN LETTER IS CORRECT",34,180,2.8)
+
+		VectorFont.DrawFont(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",GAME.Height-20,1.0)		
 		
 	End Method
 
