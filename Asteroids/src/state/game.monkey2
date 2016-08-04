@@ -46,7 +46,7 @@ Public
 		
 		'State
 		_status=GameStatus.GetReady
-		_counterTimer=New CounterTimer(150)	
+		_counterTimer=New CounterTimer(250)	
 	End Method
 
 	Method Leave:Void() Override
@@ -79,9 +79,10 @@ Public
 				'Game over?
 				If (Not Self.Player.Enabled) 
 					_status=GameStatus.GameOver
-					_counterTimer.Reset()				
-				End
-								
+					_counterTimer.Reset()	
+					Return			
+				End	
+											
 			Case GameStatus.GameOver
 				'Exit game?
 				If (_counterTimer.Elapsed) 
@@ -301,6 +302,10 @@ Private
 	Method CreateRocks:Void(enabled:Bool=False)
 		'Prepare
 		Local counter:Int=0
+
+		'Testing (postion for direct access)
+		'Self.CreateRock(New Vec2f(GAME.Width/2+100,GAME.Height/2),RockSize.Small,Rnd(360),0.0,enabled)
+		'Return
 		
 		'Process
 		Repeat 

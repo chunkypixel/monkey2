@@ -39,7 +39,7 @@ Public
 		_running=False
 	End
 	
-	Property Running:Bool()
+	Property IsRunning:Bool()
 		Return _running
 	End
 	

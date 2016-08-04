@@ -12,7 +12,7 @@ Public
 	Method New()
 		'Initialise
 		Self.BlendMode=BlendMode.Additive
-		Self.Color=GetColor(140,140,140)
+		Self.Color=GetColor(224,224,224)
 		_renderPoints=New VectorPoint[20]	
 		_basePoints=New VectorPoint[20]	
 	End Method
@@ -65,7 +65,8 @@ Public
 		
 		'Canvas
 		canvas.LineWidth=1.8	'For now make all lines >1.0 for smoothing
-				
+		canvas.Color=Self.Color
+			
 		'Prepare
 		Local dx:Float=_renderPoints[0].x+Self.X
 		Local dy:Float=_renderPoints[0].y+Self.Y
@@ -84,6 +85,7 @@ Public
 		
 		'Reset
 		canvas.Color=Color.White
+		canvas.Alpha=1.0
 	End Method
 	
 	Method CheckCollision:Bool(entity:Entity) Override

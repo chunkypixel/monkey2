@@ -13,7 +13,7 @@ Public
 
 	Method New()
 		_scale=New Vec2f(1.0,1.0)
-		_color=Color.White
+		_color=GetColor(224,224,224)
 		_blend=BlendMode.Additive
 		_rotation=0.0
 		_direction=0.0

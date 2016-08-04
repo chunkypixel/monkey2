@@ -18,7 +18,8 @@ Public
 	Method DrawFont:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
 		'Canvas
 		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
-		canvas.Color=GetColor(224,224,224,GetAlpha())
+		canvas.Color=GetColor(224,224,224)
+		canvas.Alpha=GetAlpha()
 
 		'Make uppercase (for now)
 		text=text.ToUpper()
@@ -40,6 +41,7 @@ Public
 		
 		'Reset
 		canvas.Color=Color.White
+		canvas.Alpha=1.0
 	End
 		
 	Method Length:Float(chars:Int,scale:Float)
@@ -510,7 +512,6 @@ Private
 			End Select
 			
 		Next
-		
 	End Method
 	
 End Class

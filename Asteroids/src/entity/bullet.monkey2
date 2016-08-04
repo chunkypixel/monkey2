@@ -71,10 +71,12 @@ Public
 		
 		'Draw (glow)
 		Local image:=GetImage("Particle")
+		canvas.Color=Self.Color
 		canvas.Alpha=GetAlpha()	'Flicker
 		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.5,0.5))						
 		
 		'Reset
+		canvas.Color=Color.White
 		canvas.Alpha=1.0
 	End Method
 
@@ -89,6 +91,9 @@ Private
 		'Points
 		Self.AddPoint(0,0)
 		Self.AddPoint(1,1)
+		
+		'Color
+		Self.Color=GetColor(224,224,224)
 		
 		'Other
 		Self.Speed=9.0

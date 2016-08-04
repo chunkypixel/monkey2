@@ -53,7 +53,11 @@ Class AsteroidsGame Extends Game2d
 
 	Method New(width:Int,height:int)
 		Super.New("Asteroids",width,height,WindowFlags.Resizable)
-
+		
+		'Load settings
+		LoadSettings()
+		'SaveSettings()
+		
 		'Initialise display
 		Self.Layout="stretch"
 		Self.GameResolution=New Vec2i(width,height)
@@ -117,7 +121,7 @@ End Class
 
 Function GetAlpha:Float()
 	Local alpha:Float=0.8
-	If (VECTOR_FLICKER) alpha=Rnd(0.4,0.8)
+	If (VECTOR_FLICKER) alpha=Rnd(0.5,0.8)
 	Return alpha
 End Function
 
