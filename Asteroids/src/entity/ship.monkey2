@@ -1,5 +1,4 @@
 
-
 Class ShipEntity Extends VectorEntity
 
 	Method New()

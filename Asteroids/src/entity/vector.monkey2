@@ -64,7 +64,7 @@ Public
 		If (Not Self.Enabled Or Not Self.Visible) Return
 		
 		'Canvas
-		canvas.LineWidth=1.8	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=GetLineWidth(1.8)	'For now make all lines >1.0 for smoothing
 		canvas.Color=Self.Color
 			
 		'Prepare
@@ -99,21 +99,21 @@ Public
 		'Process
 		For Local k:Int=0 until entity.Points
 			'Prepare
-			Local eX:Float=entity.RenderPoints[k].x+entity.X
-			Local eY:Float=entity.RenderPoints[k].y+entity.Y
+			Local ex:Float=entity.RenderPoints[k].x+entity.X
+			Local ey:Float=entity.RenderPoints[k].y+entity.Y
 			
 			'Validate
-			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,eX,eY)) Return True
+			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,ex,ey)) Return True
 		Next
 		
 		'Process (Double check??)
 		For Local k:Int=0 until _points
 			'Prepare
-			Local sX:Float=_renderPoints[k].x+Self.X
-			Local sY:Float=_renderPoints[k].y+Self.Y
+			Local sx:Float=_renderPoints[k].x+Self.X
+			Local sy:Float=_renderPoints[k].y+Self.Y
 			
 			'Validate
-			If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sX,sY)) Return True
+			If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sx,sy)) Return True
 		Next
 		
 		'Return
@@ -140,15 +140,15 @@ Private
 			'Rotation
 			If (Self.Rotation<>0.0)
 				Local radian:=DegreesToRadians(-Self.Rotation)
-				Local rX:Float=Cos(radian)*fx-Sin(radian)*fy
-				Local rY:Float=Sin(radian)*fx+Cos(radian)*fy
-				fx=rX
-				fy=rY
+				Local rx:Float=Cos(radian)*fx-Sin(radian)*fy
+				Local ry:Float=Sin(radian)*fx+Cos(radian)*fy
+				fx=rx
+				fy=ry
 			End 
 			
 			'Finalise
-			_renderPoints[index].x=fx
-			_renderPoints[index].y=fy
+			_renderPoints[index].x=fx*ResolutionScaler.x
+			_renderPoints[index].y=fy*ResolutionScaler.y
 		Next
 	End Method
 	

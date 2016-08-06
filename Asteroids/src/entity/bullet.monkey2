@@ -14,8 +14,8 @@ Public
 
 		'Position (offset from tip)
 		Local radian:=DegreesToRadians(direction)
-		position.X+=Cos(radian)*8
-		position.Y+=-Sin(radian)*8
+		position.X+=Cos(radian)*8*ResolutionScaler.x
+		position.Y+=-Sin(radian)*8*ResolutionScaler.y
 		Self.ResetPosition(position.X,position.Y)	
 	End Method
 
@@ -33,8 +33,8 @@ Public
 
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
-		Self.X+=Cos(radian)*Self.Speed
-		Self.Y+=-Sin(radian)*Self.Speed
+		Self.X+=Cos(radian)*Self.Speed*ResolutionScaler.x
+		Self.Y+=-Sin(radian)*Self.Speed*ResolutionScaler.y
 		
 		'Collision with rocks?
 		Local group:=GetEntityGroup("rocks")
@@ -73,7 +73,7 @@ Public
 		Local image:=GetImage("Particle")
 		canvas.Color=Self.Color
 		canvas.Alpha=GetAlpha()	'Flicker
-		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.25,0.25))						
+		If (image<>Null) canvas.DrawImage(image,Self.Position,0,New Vec2f(0.25,0.25)*ResolutionScaler.Size)						
 		
 		'Reset
 		canvas.Color=Color.White

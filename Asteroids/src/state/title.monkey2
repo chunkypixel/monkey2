@@ -22,7 +22,7 @@ Public
 		'Create/reset stuff
 		_status=TitleStatus.Title
 		_counterTimer.Reset()
-		
+				
 		'Starfield
 		Self.Starfield.Speed=0.5
 		Self.Starfield.Rotation=0.05
@@ -53,10 +53,9 @@ Public
 		'Messages
 		Select _status
 			Case TitleStatus.Title
-				VectorFont.DrawFont(canvas,TITLE,40,270,7.5)	
-				
+				VectorFont.DrawFont(canvas,TITLE,40,270,7.5)			
 				VectorFont.DrawFont(canvas,"BY CHUNKYPIXEL STUDIOS",40,320,1.5)	
-				VectorFont.DrawFont(canvas,"0.2 05.08.16",40,335,0.8)	
+				VectorFont.DrawFont(canvas,VERSION,40,335,0.8)	
 				
 			Case TitleStatus.HighScores
 				VectorFont.DrawFont(canvas,"HIGH SCORES",100,2.2)	
@@ -86,8 +85,8 @@ Public
 		End
 				
 		'Display?
-		If (Self.FlashState) VectorFont.DrawFont(canvas,"PRESS FIRE TO PLAY",Game.Height-60,2.0)	
-		
+		If (Self.FlashState) VectorFont.DrawFont(canvas,"PRESS FIRE TO PLAY",480-60,2.0)	
+
 		'Reset
 		canvas.BlendMode=BlendMode.Alpha
 	End

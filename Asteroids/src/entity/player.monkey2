@@ -220,8 +220,8 @@ Private
 		If (KeyboardControlDown("THRUST") Or JoystickButtonDown("THRUST"))
 			'Calculate
 			Local radian:=DegreesToRadians(Self.Rotation)
-			acceleration.X=Cos(radian)*Self.Speed
-			acceleration.Y=-Sin(radian)*Self.Speed
+			acceleration.X=Cos(radian)*Self.Speed*ResolutionScaler.x
+			acceleration.Y=-Sin(radian)*Self.Speed*ResolutionScaler.y
 			
 			'Thrust trail
 			Self.State.CreateTrail(Self.Position,Self.Rotation-180)

@@ -1,4 +1,5 @@
 'Source
+#Import "src/functions"
 #Import "src/settings"
 #Import "src/starfield"
 #Import "src/particles"
@@ -17,9 +18,7 @@
 #Import "src/entity/debris"
 'Assets (gfx)
 #Import "assets/gfx/arcade.ttf"
-#Import "assets/gfx/logo.png"
 #Import "assets/gfx/particle.png"
-#Import "assets/gfx/background.png"
 'Assets (snd)
 #Import "assets/snd/appear.wav"
 #Import "assets/snd/fire.wav"
@@ -44,30 +43,38 @@ Const TITLE_STATE:Int = 0
 Const GAME_STATE:Int = 1
 
 Const TITLE:String="ASTEROIDS 2K"
+Const VERSION:String="0.3 06.08.2016"
+Global ResolutionScaler:Scaler
 
 Function Main()
 	New AppInstance
-	New AsteroidsGame(640,480)
+	
+	'Settings
+	LoadSettings()
+	'SaveSettings()
+	
+	'Create game
+	Local screenSize:Vec2i=GetScreenSize()
+	New AsteroidsGame(screenSize.x,screenSize.y)
+	
+	'Run
 	App.Run()
 End Function
 
 Class AsteroidsGame Extends Game2d
 
-	Method New(width:Int,height:int)
+	Method New(width:Int,height:Int)
 		Super.New(TITLE,width,height,WindowFlags.Resizable)
-		
-		'Load settings
-		LoadSettings()
-		'SaveSettings()
-		
+				
 		'Initialise display
 		Self.Layout="stretch"
 		Self.GameResolution=New Vec2i(width,height)
+		ResolutionScaler=New Scaler(width,height)
 		Self.ClearColor=New Color(0,0,0)
 		Self.TextureFilterEnabled=False
 		Style.BackgroundColor=GetColor(0,0,0)
 		Style.DefaultFont=Font.Load("asset::arcade.ttf",10)
-		
+				
 		'Debugger
 		Self.Debug=False
 		Mouse.PointerVisible=False
@@ -120,35 +127,4 @@ Class AsteroidsGame Extends Game2d
 	End Method
 	
 End Class
-
-Function GetAlpha:Float()
-	Local alpha:Float=0.8
-	If (VECTOR_FLICKER) alpha=Rnd(0.5,0.8)
-	Return alpha
-End Function
-
-Function GetColor:Color(red:Float,green:Float,blue:Float,alpha:Float=1.0)
-	Return New Color(red/255,green/255,blue/255,alpha)
-End Function
-
-Function SetImageHandle:Void(name:String,handle:Vec2f)
-	Local image:=GetImage(name)
-	If (image<>Null) image.Handle=handle
-End Function
-
-Function ClearEntityGroup:Void(name:String)
-	Local group:=GetEntityGroup(name)
-	If (group<>Null)
-		For Local entity:=Eachin group.Entities
-			RemoveEntity(entity)
-		End
-	End
-End Function
-
-Function PlaySoundEffect:Channel(name:String,volume:Float=0.25,rate:Float=1.0,loop:Bool=False)
-	Local channel:=GAME.PlaySound(name,loop)
-	channel.Volume=volume
-	channel.Rate=rate
-	Return channel
-End
 

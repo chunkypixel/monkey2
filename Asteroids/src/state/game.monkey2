@@ -77,16 +77,14 @@ Public
 				If (_counterTimer.Elapsed)	
 					_status=GameStatus.Play				
 					Self.Player.Enabled=True
-				End
-				
+				End			
 			Case GameStatus.Play
 				'Game over?
 				If (Not Self.Player.Enabled) 
 					_status=GameStatus.GameOver
 					_counterTimer.Reset()	
 					Return			
-				End	
-											
+				End											
 			Case GameStatus.GameOver
 				'Exit game?
 				If (_counterTimer.Elapsed) 
@@ -107,8 +105,7 @@ Public
 		'Messages
 		Select _status
 			Case GameStatus.GetReady
-				VectorFont.DrawFont(canvas,"GET READY",150,2.8)
-				
+				VectorFont.DrawFont(canvas,"GET READY",150,2.8)		
 			Case GameStatus.GameOver
 				VectorFont.DrawFont(canvas,"GAME OVER",150,2.8)
 		End
@@ -148,7 +145,7 @@ Public
 
 			'Process
 			For Local count:Int=1 To lives
-				_shipLives.Position=New Vec2f(x,35)
+				_shipLives.Position=New Vec2f(x,35)*ResolutionScaler.Size
 				_shipLives.Render(canvas)
 				x+=15
 			Next
@@ -167,7 +164,7 @@ Public
 		'VectorFont.DrawFont(canvas,"PUSH ROTATE TO SELECT LETTER",34,160,2.8)
 		'VectorFont.DrawFont(canvas,"PUSH HYPERSPACE WHEN LETTER IS CORRECT",34,180,2.8)
 
-		VectorFont.DrawFont(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",GAME.Height-20,1.0)		
+		VectorFont.DrawFont(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",480-20,1.0)		
 		
 	End Method
 
@@ -185,14 +182,14 @@ Public
 	End Method
 			
 	Method Shake:Void(radius:Float=2)
-		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius)
+		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius*ResolutionScaler.Best)
 	End Method
 
 	Method InExclusionZone:Bool(entity:Entity)
 		Return Self.InExclusionZone(entity.Position) 		
 	End
 	Method InExclusionZone:Bool(position:Vec2f)
-		return (position.X>GAME.Width/2-120 And position.X<GAME.Width/2+120 And position.Y>GAME.Height/2-100 And position.Y<GAME.Height/2+100) 		
+		return (position.X>GAME.Width/2-(120*ResolutionScaler.x) And position.X<GAME.Width/2+(120*ResolutionScaler.x) And position.Y>GAME.Height/2-(100*ResolutionScaler.y) And position.Y<GAME.Height/2+(100*ResolutionScaler.y)) 		
 	End	
 			
 'Features (Particles)
@@ -233,7 +230,7 @@ Public
 				If (count=2) direction+=Rnd(10,40)
 				
 				'Speed
-				Local speed:Float=rock.Speed+0.75
+				Local speed:Float=rock.Speed+0.50
 				If (count=1) speed-=0.25	'Reduce some
 				
 				'Create

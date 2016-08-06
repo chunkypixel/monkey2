@@ -12,18 +12,18 @@ Public
 	
 	Method DrawFont(canvas:Canvas,text:String,y:Float,scale:Float)
 		Local textLength:Float=Self.Length(text.Length,scale)
-		Self.DrawFont(canvas,text,GAME.Width/2-textLength/2,y,scale)
+		Self.DrawFont(canvas,text,640/2-textLength/2,y,scale)
 	End
 	
 	Method DrawFont:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
 		'Canvas
-		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
 		canvas.Color=GetColor(224,224,224)
 		canvas.Alpha=GetAlpha()
 
 		'Make uppercase (for now)
 		text=text.ToUpper()
-				
+						
 		'Process
 		For Local index:Int=0 Until text.Length
 			'Prepare
@@ -31,9 +31,8 @@ Public
 						
 			'Draw			
 			For Local point:Int=0 Until char.Points
-				Local v0:=New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)
-				Local v1:=New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)
-				canvas.DrawLine(v0,v1)				
+				canvas.DrawLine(New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)*ResolutionScaler.Size,
+									New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)*ResolutionScaler.Size)				
 			Next
 			
 		Next
@@ -511,6 +510,7 @@ Private
 			End Select
 			
 		Next
+		
 	End Method
 	
 End Class

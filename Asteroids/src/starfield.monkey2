@@ -8,6 +8,7 @@ Private
 	Field _index:Int=0
 	Field _speed:Float=0.1
 	Field _rotation:Float=0.25
+	Field _scale:Float=2.5
 Public
 	
 	Method New()
@@ -29,7 +30,8 @@ Public
 		For Local t:Int=0 To NumStars-1
 			If (_points[t].dx>0 Or _points[t].dy>0)
 				canvas.Color=GetColor(_points[t].col,_points[t].col,_points[t].col,_points[t].scale)
-				canvas.DrawOval(_points[t].dx,_points[t].dy,3*_points[t].scale,3.0*_points[t].scale)
+				canvas.DrawOval(_points[t].dx*ResolutionScaler.x,_points[t].dy*ResolutionScaler.y,
+									_scale*_points[t].scale*ResolutionScaler.x,_scale*_points[t].scale*ResolutionScaler.y)
 			End
 		Next	
 		
@@ -75,7 +77,7 @@ Struct StarfieldPoint
 		'Set
 		x=Rnd(-500,500)
 		y=Rnd(-500,500)
-		z=Rnd(0,1000)
+		z=Rnd(100,1000)
 		dx=0
 		dy=0
 		vel=Rnd(0.5,5)		
@@ -96,11 +98,11 @@ Struct StarfieldPoint
 		scale=(col/255)
 
 		'Convert 3d into 2d
-		dx=((x/z)*100)+(GAME.Width*0.5)
-		dy=((y/z)*100)+(GAME.Height*0.5)
+		dx=((x/z)*100)+(640*0.5)
+		dy=((y/z)*100)+(480*0.5)
 								
 		'Reset?
-		If (dx<0 Or dx>GAME.Width Or dy<0 Or dy>GAME.Height Or z<1)	Self.Initialise()		
+		If (dx<0 Or dx>640 Or dy<0 Or dy>480 Or z<1) Self.Initialise()		
 	End Method
 	
 End Struct

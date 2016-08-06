@@ -44,8 +44,8 @@ Public
 		
 		'Offset (from tail)
 		Local radian:=DegreesToRadians(direction)
-		x+=Cos(radian)*8
-		y+=-Sin(radian)*8
+		x+=Cos(radian)*8*ResolutionScaler.x
+		y+=-Sin(radian)*8*ResolutionScaler.y
 		
 		'Create
 		For Local t:Int=0 Until particles
@@ -96,10 +96,7 @@ Public
 		Local r:Float,g:Float,b:Float
 			
 		'Prepare
-		'Local currentTextureFilteringEnabled:Bool=canvas.TextureFilteringEnabled
-		'canvas.TextureFilteringEnabled=True
-		'canvas.BlendMode=BlendMode.Additive
-		canvas.LineWidth=2.0	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
 
 		'Get image
 		Local image:=GetImage("Particle")
@@ -112,9 +109,14 @@ Public
 				g=Min(_points[t].g*1.25,255.0)
 				b=Min(_points[t].b*1.25,255.0)
 				
+				'Position
+				Local v0:=New Vec2f(_points[t].x,_points[t].y)
+				Local v1:=New Vec2f(_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
+				Local s:=New Vec2f(ResolutionScaler.x,ResolutionScaler.y)
+				
 				'Draw (line)
 				canvas.Color=GetColor(r,g,b,0.8)	
-				canvas.DrawLine(_points[t].x,_points[t].y,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)				
+				canvas.DrawLine(v0,v1)
 				
 				'Draw (image)
 				If (image<>Null) 
@@ -122,7 +124,7 @@ Public
 					Local alpha:Float=0.25
 					If (_points[t].active>10) canvas.Alpha=Rnd(0.0,1.0)
 					canvas.Color=GetColor(r,g,b,alpha)
-					canvas.DrawImage(image,_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)						
+					canvas.DrawImage(image,v1,0,s)
 				End
 			End	
 		Next
@@ -130,15 +132,13 @@ Public
 		'Reset
 		canvas.Alpha=1.0
 		canvas.Color=Color.White	
-		'canvas.TextureFilteringEnabled=currentTextureFilteringEnabled
-		'canvas.LineWidth=1.0
 	End Method
 	
 Private
 	Method Create:Void(x:Float,y:Float,type:Int,r:Int,g:Int,b:Int,direction:Float=0.0)
 		'Prepare
-		Local distance:Float=1.0
-		Local length:Float=1.5
+		Local distance:Float
+		Local length:Float=1.5*ResolutionScaler.Best
 				
 		'Set particle
 		_points[_index].x=x
@@ -152,17 +152,18 @@ Private
 		Select type
 			Case ParticleType.Random
 				direction=Rnd(0,360)
-				distance=Rnd(3,11)
+				distance=Rnd(3,11)*ResolutionScaler.Best
 				_points[_index].dx=Cos(direction)*distance
 				_points[_index].dy=Sin(direction)*distance
 			Case ParticleType.Trail
 				direction+=Rnd(-1,1)
+				distance=1.0*ResolutionScaler.Best
 				_points[_index].dx=Cos(direction)
 				_points[_index].dy=Sin(direction)
 				_points[_index].active/=2
 			Case ParticleType.Explosion
 				direction=Rnd(0,360)
-				distance=Rnd(0.5,3.0)
+				distance=Rnd(0.5,3.0)*ResolutionScaler.Best
 				_points[_index].dx=Cos(direction)*distance
 				_points[_index].dy=Sin(direction)*distance		
 		End
