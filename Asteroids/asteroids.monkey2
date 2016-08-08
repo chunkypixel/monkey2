@@ -1,5 +1,6 @@
 'Source
 #Import "src/functions"
+#Import "src/scaler"
 #Import "src/settings"
 #Import "src/starfield"
 #Import "src/particles"
@@ -7,8 +8,9 @@
 #Import "src/font"
 #Import "src/timer"
 #Import "src/state/base"
-#Import "src/state/game"
 #Import "src/state/title"
+#Import "src/state/game"
+#Import "src/state/highscore"
 #Import "src/entity/object"
 #Import "src/entity/vector"
 #Import "src/entity/ship"
@@ -39,12 +41,12 @@ Using mojo..
 Using wdw.game2d
 
 'Game states
-Const TITLE_STATE:Int = 0
-Const GAME_STATE:Int = 1
+Const TITLE_STATE:Int=0
+Const GAME_STATE:Int=1
+Const HIGHSCORE_STATE:Int=2
 
 Const TITLE:String="ASTEROIDS 2K"
-Const VERSION:String="0.3 06.08.2016"
-Global ResolutionScaler:Scaler
+Const VERSION:String="0.4 08.08.2016"
 
 Function Main()
 	New AppInstance
@@ -69,7 +71,7 @@ Class AsteroidsGame Extends Game2d
 		'Initialise display
 		Self.Layout="stretch"
 		Self.GameResolution=New Vec2i(width,height)
-		ResolutionScaler=New Scaler(width,height)
+		VirtualResolution=New ResolutionScaler(width,height)
 		Self.ClearColor=New Color(0,0,0)
 		Self.TextureFilterEnabled=False
 		Style.BackgroundColor=GetColor(0,0,0)
@@ -98,12 +100,8 @@ Class AsteroidsGame Extends Game2d
 		ApplyInputConfiguration()
 
 		'Add images
-		AddImage("Logo","asset::logo.png")
-		SetImageHandle("Logo",New Vec2f(0.5,0.0))
 		AddImage("Particle","asset::particle.png")
 		SetImageHandle("Particle",New Vec2f(0.5,0.5))
-		AddImage("Background","asset::background.png")
-		SetImageHandle("Background",New Vec2f(0.5,0.5))
 
 		'Add sounds
 		AddSound("Appear","asset::appear.wav")
@@ -117,8 +115,9 @@ Class AsteroidsGame Extends Game2d
 		AddSound("ThumpLo","asset::thumplo.wav")
 		
 		'Create states
-		AddState( New TitleState,TITLE_STATE )
-		AddState( New GameState,GAME_STATE )
+		AddState(New TitleState,TITLE_STATE)
+		AddState(New GameState,GAME_STATE)
+		AddState(New HighScoreState,HIGHSCORE_STATE)
 		Self.EnterTransition=New TransitionFadein		
 	End Method
 	

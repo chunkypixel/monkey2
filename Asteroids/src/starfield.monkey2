@@ -1,14 +1,21 @@
-'http://www.blitzbasic.com/Community/posts.php?topic=96817
 
-Const NumStars:Int=250
+Global Starfield:=New StarfieldManager()
+
+'-----------------------------------------------------------------------------------------------
+' Starfield usage:
+' - Screen resolution is based on 640x480
+' - All stars should be plotted within this resolution
+' - Stars will be automatically scaled up using the ResolutionScaler
+' - Code: http://www.blitzbasic.com/Community/posts.php?topic=96817
+'-----------------------------------------------------------------------------------------------
 
 Class StarfieldManager
 Private
 	Field _points:StarfieldPoint[]
-	Field _index:Int=0
 	Field _speed:Float=0.1
 	Field _rotation:Float=0.25
 	Field _scale:Float=2.5
+	Field _maxStars:Int=250
 Public
 	
 	Method New()
@@ -17,7 +24,7 @@ Public
 	
 	Method Update:Void()
 		'Process
-		For Local t:Int=0 To NumStars-1
+		For Local t:Int=0 To _maxStars-1
 			_points[t].Update(_speed,_rotation)
 		Next		
 	End Method
@@ -25,17 +32,22 @@ Public
 	Method Render:Void(canvas:Canvas)
 		'Canvas
 		canvas.BlendMode=BlendMode.Additive
-
+		canvas.Color=Color.White
+		
 		'Render
-		For Local t:Int=0 To NumStars-1
+		For Local t:Int=0 To _maxStars-1
 			If (_points[t].dx>0 Or _points[t].dy>0)
+				'Color
 				canvas.Color=GetColor(_points[t].col,_points[t].col,_points[t].col,_points[t].scale)
-				canvas.DrawOval(_points[t].dx*ResolutionScaler.x,_points[t].dy*ResolutionScaler.y,
-									_scale*_points[t].scale*ResolutionScaler.x,_scale*_points[t].scale*ResolutionScaler.y)
+				
+				'Draw
+				canvas.DrawOval(_points[t].dx*VirtualResolution.sx,_points[t].dy*VirtualResolution.sy,
+									_scale*_points[t].scale*VirtualResolution.sx,_scale*_points[t].scale*VirtualResolution.sy)
 			End
 		Next	
 		
 		'Reset
+		canvas.Color=Color.White
 		canvas.Alpha=1.0	
 	End Method
 	
@@ -51,13 +63,18 @@ Public
 		_speed=value
 	End
 	
+	Property MaxStars:Int()
+		Return _maxStars
+	Setter(value:Int)
+		_maxStars=value
+		Self.Initialise()
+	End
+	
 Private
 	Method Initialise()
 		'Initialise
-		_points=New StarfieldPoint[NumStars]			
-		
-		'Process
-		For Local t:Int=0 To NumStars-1
+		_points=New StarfieldPoint[_maxStars]			
+		For Local t:Int=0 To _maxStars-1
 			_points[t].Initialise()
 		Next	
 	End Method		
@@ -98,11 +115,11 @@ Struct StarfieldPoint
 		scale=(col/255)
 
 		'Convert 3d into 2d
-		dx=((x/z)*100)+(640*0.5)
-		dy=((y/z)*100)+(480*0.5)
+		dx=((x/z)*100)+(VirtualResolution.Width*0.5)
+		dy=((y/z)*100)+(VirtualResolution.Height*0.5)
 								
 		'Reset?
-		If (dx<0 Or dx>640 Or dy<0 Or dy>480 Or z<1) Self.Initialise()		
+		If (dx<0 Or dx>VirtualResolution.Width Or dy<0 Or dy>VirtualResolution.Height Or z<1) Self.Initialise()		
 	End Method
 	
 End Struct

@@ -1,15 +1,34 @@
 
-Global Timers:=New List<CounterTimer>
+Global Timers:=New TimerManager()
 
-Function UpdateCounterTimers:Void()
-	For Local ct:=Eachin Timers
-		ct.Update()
-	Next
+Class TimerManager
+Private
+	Field _timers:List<CounterTimer>
+Public
+	Method New()
+		'Initialise
+		Self.Initialise()
+	End Method
 	
-End Function
+	Method Update:Void()
+		For Local timer:=Eachin _timers
+			timer.Update()
+		Next	
+	End Method
+	
+	Method Add:Void(timer:CounterTimer)
+		_timers.Add(timer)
+	End Method
+	
+Private
+	Method Initialise:Void()
+		'Initialise
+		_timers=New List<CounterTimer>
+	End Method
+	
+End Class
 
 Class CounterTimer
-
 Private
 	Field _counter:Int=0
 Public

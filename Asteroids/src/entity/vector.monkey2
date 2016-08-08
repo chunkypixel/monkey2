@@ -43,15 +43,15 @@ Public
 		'Validate
 		If (Not Self.Enabled) Return
 
-		'Validate
-		If (Self.X<-5) Self.ResetPosition(GAME.Width+5,Self.Y)
-		If (Self.X>GAME.Width+5) Self.ResetPosition(-5,Self.Y)
-		If (Self.Y<-5) Self.ResetPosition(Self.X,GAME.Height+5)
-		If (Self.Y>GAME.Height+5) Self.ResetPosition(Self.X,-5)
+		'Validate (wrap)
+		If (Self.X<-5) Self.ResetPosition(VirtualResolution.Width+5,Self.Y)
+		If (Self.X>VirtualResolution.Width+5) Self.ResetPosition(-5,Self.Y)
+		If (Self.Y<-5) Self.ResetPosition(Self.X,VirtualResolution.Height+5)
+		If (Self.Y>VirtualResolution.Height+5) Self.ResetPosition(Self.X,-5)
 		
-		'Validate
+		'Changes?
 		If (_currentScale.X<>Self.Scale.X Or _currentScale.Y<>Self.Scale.Y Or _currentRotation<>Self.Rotation)
-			'Plot
+			'(Re)Plot
 			Self.PlotPoints()				
 			'Store
 			_currentScale=Self.Scale
@@ -68,19 +68,19 @@ Public
 		canvas.Color=Self.Color
 			
 		'Prepare
-		Local dx:Float=_renderPoints[0].x+Self.X
-		Local dy:Float=_renderPoints[0].y+Self.Y
+		Local dx:Float=(_renderPoints[0].x+Self.X)*VirtualResolution.sx
+		Local dy:Float=(_renderPoints[0].y+Self.Y)*VirtualResolution.sy
 		
 		'Process
 		For Local index:Int=1 Until _points
 			'Render
 			canvas.Alpha=GetAlpha()	'Flicker
-			canvas.DrawLine(dx,dy,_renderPoints[index].x+Self.X,_renderPoints[index].y+Self.Y)
+			canvas.DrawLine(dx,dy,(_renderPoints[index].x+Self.X)*VirtualResolution.sx,(_renderPoints[index].y+Self.Y)*VirtualResolution.sy)
 			canvas.Alpha=0.8
 			canvas.DrawPoint(Int(dx),Int(dy))
-			'Update
-			dx=_renderPoints[index].x+Self.X
-			dy=_renderPoints[index].y+Self.Y
+			'Store (for next draw)
+			dx=(_renderPoints[index].x+Self.X)*VirtualResolution.sx
+			dy=(_renderPoints[index].y+Self.Y)*VirtualResolution.sy
 		Next
 		
 		'Reset
@@ -147,8 +147,8 @@ Private
 			End 
 			
 			'Finalise
-			_renderPoints[index].x=fx*ResolutionScaler.x
-			_renderPoints[index].y=fy*ResolutionScaler.y
+			_renderPoints[index].x=fx
+			_renderPoints[index].y=fy
 		Next
 	End Method
 	

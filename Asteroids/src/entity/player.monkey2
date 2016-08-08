@@ -16,7 +16,7 @@ Class PlayerEntity Extends ShipEntity
 Private
 	Field _velocity:=New Vec2f
 	Field _thrustChannel:Channel
-	Field _counterTimer:CounterTimer
+	Field _counter:CounterTimer
 	Field _playerState:PlayerStateFlags
 	Field _levelComplete:Bool=False
 Public
@@ -27,10 +27,7 @@ Public
 	Method New()
 		'Create
 		Self.Initialise()
-		
-		'Counter
-		_counterTimer=New CounterTimer(200,False)
-	End
+	End Method
 	
 	Method Reset:Void() Override
 		'Base
@@ -38,12 +35,12 @@ Public
 
 		'Set
 		Self.Visible=False
-		Self.ResetPosition(GAME.GameResolution.X/2,GAME.GameResolution.Y/2)	
+		Self.ResetPosition(VirtualResolution.Width/2,VirtualResolution.Height/2)	
 		_velocity=New Vec2f()	
 				
 		'Remove 
 		ClearEntityGroup("debris")
-	End
+	End Method
 	
 	Method Update:Void() Override
 		'Base
@@ -61,7 +58,7 @@ Public
 			
 			'Set
 			_levelComplete=True
-			_counterTimer.Reset()
+			_counter.Reset()
 			
 			'Change state?
 			If (_playerState=PlayerStateFlags.Active) _playerState=PlayerStateFlags.Complete
@@ -114,7 +111,7 @@ Public
 					Local rock:=Cast<RockEntity>(entity)
 					If (rock.CheckCollision(Self)) 
 						'Explode (and shake)
-						Self.State.CreateExplosion(Self.Position)
+						Particles.CreateExplosion(Self.Position,rock.Size)
 						Self.State.CreateShipExplosion(Self.Position)
 						Self.State.Shake(10)
 						
@@ -129,7 +126,7 @@ Public
 						'Set
 						_playerState=PlayerStateFlags.Exploding
 						Self.Visible=False
-						_counterTimer.Reset()
+						_counter.Reset()
 					End
 				Next		
 				
@@ -139,10 +136,9 @@ Public
 					Self.Enabled=False
 					Return
 				End
-					
-				
+						
 				'Restart?
-				If (_counterTimer.Elapsed) 
+				If (_counter.Elapsed) 
 					'Set
 					Self.Reset()
 					_playerState=PlayerStateFlags.Release
@@ -157,7 +153,7 @@ Public
 				Self.PlayerMovement()
 
 				'Restart?
-				If (_counterTimer.Elapsed) 
+				If (_counter.Elapsed) 
 					'Set
 					_playerState=PlayerStateFlags.Active
 					
@@ -173,9 +169,12 @@ Public
 	'End Method
 		
 Private
-	Method Initialise() Override
+	Method Initialise:Void() Override
 		'Base
 		Super.Initialise()
+
+		'Counter
+		_counter=New CounterTimer(200,False)
 		
 		'Other
 		Self.Speed=0.07
@@ -191,7 +190,6 @@ Private
 		
 		'State
 		_playerState=PlayerStateFlags.Release
-
 	End Method
 		
 	Method PlayerMovement:Void()
@@ -220,11 +218,10 @@ Private
 		If (KeyboardControlDown("THRUST") Or JoystickButtonDown("THRUST"))
 			'Calculate
 			Local radian:=DegreesToRadians(Self.Rotation)
-			acceleration.X=Cos(radian)*Self.Speed*ResolutionScaler.x
-			acceleration.Y=-Sin(radian)*Self.Speed*ResolutionScaler.y
-			
+			acceleration.X=Cos(radian)*Self.Speed
+			acceleration.Y=-Sin(radian)*Self.Speed
 			'Thrust trail
-			Self.State.CreateTrail(Self.Position,Self.Rotation-180)
+			Particles.CreateTrail(Self.Position,Self.Rotation-180)
 			
 			'Play?
 			If (_thrustChannel.Paused) _thrustChannel.Paused=False
@@ -238,7 +235,7 @@ Private
 			'Validate
 			If (Self.State.TotalBullets<4) 
 				'Create bullet
-				Local bullet:=New BulletEntity(New Vec2f(Self.X,Self.Y),Self.Rotation)
+				Local bullet:=New BulletEntity(Self.Position,Self.Rotation)
 				bullet.State=Self.State
 				AddEntity(bullet,LAYER_BULLETS)
 				AddEntityToGroup(bullet,"bullets")

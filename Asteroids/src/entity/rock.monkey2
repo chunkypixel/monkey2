@@ -29,8 +29,8 @@ Public
 		
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
-		Self.X+=Cos(radian)*Self.Speed*ResolutionScaler.x
-		Self.Y+=-Sin(radian)*Self.Speed*ResolutionScaler.y
+		Self.X+=Cos(radian)*Self.Speed
+		Self.Y+=-Sin(radian)*Self.Speed
 	End Method
 
 Private

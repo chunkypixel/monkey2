@@ -1,7 +1,6 @@
 
 Global MAX_LIVES:Int=3
 Global VECTOR_FLICKER:Bool=True
-Global BACKGROUND_IMAGE:Bool=False
 Global SHAKE_ON_EXPLOSION:Bool=True
 Global SCREEN_WIDTH:Int=1024
 
@@ -15,7 +14,6 @@ Function LoadSettings:Void()
 		SCREEN_WIDTH=settings["screenwidth"].ToInt()
 		MAX_LIVES=settings["lives"].ToInt()
 		VECTOR_FLICKER=settings["flicker"].ToBool()
-		'BACKGROUND_IMAGE=settings["backgroundimage"].ToBool()
 		SHAKE_ON_EXPLOSION=settings["shake"].ToBool()
 	End
 End Function
@@ -26,7 +24,6 @@ Function SaveSettings:Void()
 	settings["screenwidth"] = New JsonNumber(SCREEN_WIDTH)
 	settings["lives"] = New JsonNumber(MAX_LIVES)
 	settings["flicker"] = New JsonBool(VECTOR_FLICKER)
-	'settings["backgroundimage"] = New JsonBool(BACKGROUND_IMAGE)
 	settings["shake"] = New JsonBool(SHAKE_ON_EXPLOSION)
 	
 	'Save (attempt)

@@ -1,51 +1,58 @@
 
+Global Particles:=New ParticleManager()
+
+'-----------------------------------------------------------------------------------------------
+' Particles usage:
+' - Screen Size is based on actual screen size
+' - All particles should be plotted within this resolution
+' - Particles will be automatically scaled up using the ResolutionScaler
+'-----------------------------------------------------------------------------------------------
+
 Enum ParticleType
 	Random=0
 	Trail=1
 	Explosion=2
 End Enum
 
-Const NumParticles:Int=1024
-Const ParticleLife:Int=40
-
 Class ParticleManager
 
 Private
 	Field _points:ParticlePoint[]
 	Field _index:Int=0
+	Field _particleLife:Int=40
+	Field _maxParticles:Int=768
 Public
 
 	Method New()
 		'Initialise
-		_points=New ParticlePoint[NumParticles]		
-		Self.Reset()			
+		Self.Initialise()			
 	End
-	
-	Method CreateParticles:Void(x:Int,y:Int,type:Int=0,particles:Int=32)
+
+	Method CreateParticles:Void(position:Vec2f,type:Int=0,particles:Int=32)
 		'Prepare
 		Local r:Int=128+Rnd(0,64)
 		Local g:Int=r
 		Local b:Int=r
 		'Create
-		Self.CreateParticles(x,y,type,r,g,b,particles)	
+		Self.CreateParticles(position,type,r,g,b,particles)	
 	End
 
-	Method CreateParticles:Void(x:Int,y:Int,type:Int=0,r:Int,g:Int,b:Int,particles:Int=32)
+	Method CreateParticles:Void(position:Vec2f,type:Int=0,r:Int,g:Int,b:Int,particles:Int=32)
 		'Create
 		For Local t:Int=0 Until particles
-			Self.Create(x,y,type,r,g,b)
+			Self.Create(position,type,r,g,b)
 		Next	
 	End
 	
-	Method CreateTrail:Void(x:Int,y:Int,direction:Float,particles:Int=2)
+	Method CreateTrail:Void(position:Vec2f,direction:Float,particles:Int=2)
 		'Validate
 		If (direction<0) direction+=360
 		If (direction>360) direction-=360
 		
 		'Offset (from tail)
 		Local radian:=DegreesToRadians(direction)
-		x+=Cos(radian)*8*ResolutionScaler.x
-		y+=-Sin(radian)*8*ResolutionScaler.y
+		position.x+=Cos(radian)*8
+		position.y+=-Sin(radian)*8
 		
 		'Create
 		For Local t:Int=0 Until particles
@@ -54,55 +61,55 @@ Public
 			Local g:Int=r
 			Local b:Int=r
 			'Process
-			Self.Create(x,y,ParticleType.Trail,r,g,b,direction)		
+			Self.Create(position,ParticleType.Trail,r,g,b,direction)		
 		Next
 	End Method
 	
-	Method CreateExplosion:Void(x:Int,y:Int)
+	Method CreateExplosion:Void(position:Vec2f,size:Int)
+		'Validate
+		Local particles:Int
+		
+		'Validate
+		Select size
+			Case 1	'Large
+				particles=60
+			Case 2	'Medium
+				particles=40
+			Case 3	'Small
+				particles=20
+		End
+		
 		'Create
-		For Local t:Int=0 Until 32
+		For Local t:Int=0 Until particles
 			'Prepare
 			Local r:Int=128+Rnd(0,64)
 			Local g:Int=r
 			Local b:Int=r
 			'Process
-			Self.Create(x,y,ParticleType.Explosion,r,g,b)		
+			Self.Create(position,ParticleType.Explosion,r,g,b,0.0,size)		
 		Next	
 	End Method
 		
 	Method Update:Void()
 		'Process
-		For Local t:Int=0 To NumParticles-1
+		For Local t:Int=0 To _maxParticles-1
 			If (_points[t].active>0) _points[t].Update()
 		Next		
 	End Method
 	
-	Method Reset:Void()
-		'Reset
-		_index=0
-		For Local t:Int=0 To NumParticles-1
-			_points[t].x=0
-			_points[t].y=0
-			_points[t].r=0
-			_points[t].g=0
-			_points[t].b=0
-			_points[t].active=0
-			_points[t].dx=0
-			_points[t].dy=0
-		Next		
-	End Method
-	
 	Method Render(canvas:Canvas)
+		'Prepare
 		Local r:Float,g:Float,b:Float
 			
-		'Prepare
+		'Canvas
+		canvas.BlendMode=BlendMode.Additive
 		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
 
 		'Get image
 		Local image:=GetImage("Particle")
 		
 		'Process
-		For Local t:int=0 To NumParticles-1
+		For Local t:int=0 To _maxParticles-1
 			If (_points[t].active>0)
 				'Get color
 				r=Min(_points[t].r*1.25,255.0)
@@ -110,9 +117,8 @@ Public
 				b=Min(_points[t].b*1.25,255.0)
 				
 				'Position
-				Local v0:=New Vec2f(_points[t].x,_points[t].y)
-				Local v1:=New Vec2f(_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)
-				Local s:=New Vec2f(ResolutionScaler.x,ResolutionScaler.y)
+				Local v0:=New Vec2f(_points[t].x,_points[t].y)*VirtualResolution.Scale
+				Local v1:=New Vec2f(_points[t].x+_points[t].dx,_points[t].y+_points[t].dy)*VirtualResolution.Scale
 				
 				'Draw (line)
 				canvas.Color=GetColor(r,g,b,0.8)	
@@ -122,48 +128,62 @@ Public
 				If (image<>Null) 
 					'Sparkle
 					Local alpha:Float=0.25
-					If (_points[t].active>10) canvas.Alpha=Rnd(0.0,1.0)
+					If (_points[t].active>10) canvas.Alpha=Rnd(0.3,1.0)
 					canvas.Color=GetColor(r,g,b,alpha)
-					canvas.DrawImage(image,v1,0,s)
+					canvas.DrawImage(image,v1,0,New Vec2f(0.75,0.75)*VirtualResolution.Scale)
 				End
 			End	
 		Next
 		
 		'Reset
-		canvas.Alpha=1.0
 		canvas.Color=Color.White	
+		canvas.Alpha=1.0
 	End Method
 	
 Private
-	Method Create:Void(x:Float,y:Float,type:Int,r:Int,g:Int,b:Int,direction:Float=0.0)
+	Method Create:Void(position:Vec2f,type:Int,r:Int,g:Int,b:Int,direction:Float=0.0,size:Int=2)
 		'Prepare
 		Local distance:Float
-		Local length:Float=1.5*ResolutionScaler.Best
+		Local length:Float
+		Local range:Float
 				
 		'Set particle
-		_points[_index].x=x
-		_points[_index].y=y
+		_points[_index].x=position.x
+		_points[_index].y=position.y
 		_points[_index].r=r
 		_points[_index].g=g
 		_points[_index].b=b
-		_points[_index].active=Rnd(ParticleLife-20,ParticleLife)
+		_points[_index].active=Rnd(_particleLife-20,_particleLife)
+		
+		'Validate
+		Select size
+			Case 1
+				length=1.8
+				range=1.2	
+			Case 2
+				length=1.4
+				range=0.9
+			Case 3
+				length=1.0
+				range=0.6
+		End
 		
 		'Validate
 		Select type
 			Case ParticleType.Random
 				direction=Rnd(0,360)
-				distance=Rnd(3,11)*ResolutionScaler.Best
+				distance=Rnd(1.5*range,5.5*range)
 				_points[_index].dx=Cos(direction)*distance
 				_points[_index].dy=Sin(direction)*distance
 			Case ParticleType.Trail
 				direction+=Rnd(-1,1)
-				distance=1.0*ResolutionScaler.Best
+				distance=1.0
 				_points[_index].dx=Cos(direction)
 				_points[_index].dy=Sin(direction)
 				_points[_index].active/=2
 			Case ParticleType.Explosion
 				direction=Rnd(0,360)
-				distance=Rnd(0.5,3.0)*ResolutionScaler.Best
+				distance=Rnd(0.5*range,2.5*range)
 				_points[_index].dx=Cos(direction)*distance
 				_points[_index].dy=Sin(direction)*distance		
 		End
@@ -175,9 +195,20 @@ Private
 		_points[_index].y+=_points[_index].dy
 		
 		'Increment
-		_index=(_index+1) Mod NumParticles		
+		_index=(_index+1) Mod _maxParticles		
 	End Method
-	
+
+	Method Initialise:Void()
+		'Initialise
+		_points=New ParticlePoint[_maxParticles]		
+		For Local t:Int=0 To _maxParticles-1
+			_points[t].Initialise()
+		Next	
+		
+		'Set
+		_index=0
+	End Method
+			
 End Class
 
 Struct ParticlePoint
@@ -194,6 +225,17 @@ public
 	Field active:Int=0
 	Field decay:Float=0.95
 
+	Method Initialise:Void()
+		x=0
+		y=0
+		r=0
+		g=0
+		b=0
+		active=0
+		dx=0
+		dy=0	
+	End Method
+	
 	Method Update:Void()
 		'Update
 		x+=dx
@@ -202,10 +244,10 @@ public
 		dy*=decay
 				
 		'Validate
-		If (x<-5) x=GAME.Width+5
-		If (x>GAME.Width+5) x=-5
-		If (y<-5) y=GAME.Height+5
-		If (y>GAME.Height+5) y=-5
+		If (x<-5) x=VirtualResolution.Width+5
+		If (x>VirtualResolution.Width+5) x=-5
+		If (y<-5) y=VirtualResolution.Height+5
+		If (y>VirtualResolution.Height+5) y=-5
 		
 		'Reduce life
 		active-=1

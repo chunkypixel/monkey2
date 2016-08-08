@@ -13,13 +13,12 @@ End
 Class GameState Extends BaseState
 
 Private
-	Field _particles:ParticleManager
 	Field _camera:CameraEntity
 	Field _maxRocks:Int
 	Field _highScore:Int=0
 	Field _shipLives:ShipEntity
 	Field _status:GameStatus=GameStatus.GetReady
-	Field _counterTimer:CounterTimer
+	Field _counter:CounterTimer
 Public
 	Field Player:PlayerEntity
 	Field Thump:ThumpSound
@@ -29,18 +28,18 @@ Public
 		_maxRocks=4
 
 		'Starfield
-		Self.Starfield.Speed=0.05
-		Self.Starfield.Rotation=0.0
+		Starfield.Speed=0.05
+		Starfield.Rotation=0.0
 			
 		'Initialise
 		Self.CreatePlayer()
 		Self.CreateRocks()
 		Self.CreateThump()
-		_particles=New ParticleManager()
 		_shipLives=New ShipEntity()
 		
 		'Camera (for shaking)
 		Local anchor:Entity=New Entity()
+		'NOTE: Must be actual screen not virtual
 		anchor.ResetPosition(GAME.Width/2,GAME.Height/2)
 		AddEntity(anchor,LAYER_CAMERA)
 		_camera=New CameraEntity()
@@ -50,12 +49,11 @@ Public
 		
 		'State
 		_status=GameStatus.GetReady
-		_counterTimer=New CounterTimer(250)	
+		_counter=New CounterTimer(250)	
 	End Method
 
 	Method Leave:Void() Override
 		'Tidup/save stuff
-		_particles=Null
 		_shipLives=Null
 		Self.Thump=Null
 		Self.Player=Null
@@ -67,14 +65,13 @@ Public
 		Super.Update()
 			
 		'Update
-		_particles.Update()
 		Self.Thump.Update()
 		
 		'Validate
 		Select _status
 			Case GameStatus.GetReady
 				'Start game?
-				If (_counterTimer.Elapsed)	
+				If (_counter.Elapsed)	
 					_status=GameStatus.Play				
 					Self.Player.Enabled=True
 				End			
@@ -82,13 +79,17 @@ Public
 				'Game over?
 				If (Not Self.Player.Enabled) 
 					_status=GameStatus.GameOver
-					_counterTimer.Reset()	
+					_counter.Reset()	
 					Return			
 				End											
 			Case GameStatus.GameOver
 				'Exit game?
-				If (_counterTimer.Elapsed) 
-					GAME.EnterState(TITLE_STATE,New TransitionFadein,New TransitionFadeout)				
+				If (_counter.Elapsed) 
+					If (Self.IsHighScore())
+						GAME.EnterState(HIGHSCORE_STATE,New TransitionFadein,New TransitionFadeout)				
+					Else
+						GAME.EnterState(TITLE_STATE,New TransitionFadein,New TransitionFadeout)				
+					End
 				End
 		End
 
@@ -100,14 +101,13 @@ Public
 	Method Render:Void(canvas:Canvas,tween:Double) Override	
 		'Entities and particles
 		Super.Render(canvas,tween)
-		_particles.Render(canvas)
 
 		'Messages
 		Select _status
 			Case GameStatus.GetReady
-				VectorFont.DrawFont(canvas,"GET READY",150,2.8)		
+				VectorFont.Write(canvas,"GET READY",150,2.8)		
 			Case GameStatus.GameOver
-				VectorFont.DrawFont(canvas,"GAME OVER",150,2.8)
+				VectorFont.Write(canvas,"GAME OVER",150,2.8)
 		End
 		
 		'Reset
@@ -126,15 +126,15 @@ Public
 		Local score:String="0"
 		If (Player.Score>0) score=Player.Score
 		score="        "+score
-		VectorFont.DrawFont(canvas,score.Right(8),154-100,4,2.5)
+		VectorFont.Write(canvas,score.Right(8),154-100,4,2.5)
 		'Length 12.5 - 2.5
 		
 		'High
 		Local highScore:String="10000"
 		If (_highScore>0) highScore=_highScore
 		highScore="        "+highScore
-		VectorFont.DrawFont(canvas,highScore.Right(8),332-60,10,1.5)
-		VectorFont.DrawFont(canvas,"MKS",340,10,1.5)
+		VectorFont.Write(canvas,highScore.Right(8),332-60,10,1.5)
+		VectorFont.Write(canvas,"MKS",340,10,1.5)
 		'Length 7.5 - 1.5
 
 		'Lives?
@@ -145,7 +145,7 @@ Public
 
 			'Process
 			For Local count:Int=1 To lives
-				_shipLives.Position=New Vec2f(x,35)*ResolutionScaler.Size
+				_shipLives.Position=New Vec2f(x,35)
 				_shipLives.Render(canvas)
 				x+=15
 			Next
@@ -153,19 +153,13 @@ Public
 		
 		'Level
 		Local level:String="0"+Self.Player.Level
-		VectorFont.DrawFont(canvas,level.Right(2),170,10,1.5)
+		VectorFont.Write(canvas,level.Right(2),170,10,1.5)
 		'Remaining
 		Local remaining:String="0"+Self.PotentialRocks
-		VectorFont.DrawFont(canvas,remaining.Right(2),190,10,1.5)
+		VectorFont.Write(canvas,remaining.Right(2),190,10,1.5)
 				
-		'Message
-		'VectorFont.DrawFont(canvas,"YOUR SCORE IS ONE OF THE TEN BEST",34,120,2.8)
-		'VectorFont.DrawFont(canvas,"PLEASE ENTER YOUR INITIALS",34,140,2.8)
-		'VectorFont.DrawFont(canvas,"PUSH ROTATE TO SELECT LETTER",34,160,2.8)
-		'VectorFont.DrawFont(canvas,"PUSH HYPERSPACE WHEN LETTER IS CORRECT",34,180,2.8)
-
-		VectorFont.DrawFont(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",480-20,1.0)		
-		
+		'Note
+		VectorFont.Write(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",VirtualResolution.Height-20,1.0)		
 	End Method
 
 'Features (General)
@@ -182,31 +176,29 @@ Public
 	End Method
 			
 	Method Shake:Void(radius:Float=2)
-		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius*ResolutionScaler.Best)
+		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius*VirtualResolution.Best)
 	End Method
 
 	Method InExclusionZone:Bool(entity:Entity)
 		Return Self.InExclusionZone(entity.Position) 		
 	End
 	Method InExclusionZone:Bool(position:Vec2f)
-		return (position.X>GAME.Width/2-(120*ResolutionScaler.x) And position.X<GAME.Width/2+(120*ResolutionScaler.x) And position.Y>GAME.Height/2-(100*ResolutionScaler.y) And position.Y<GAME.Height/2+(100*ResolutionScaler.y)) 		
+		return (position.X>VirtualResolution.Width/2-120 And position.X<VirtualResolution.Width/2+120 And position.Y>VirtualResolution.Height/2-100 And position.Y<VirtualResolution.Height/2+100) 		
 	End	
+	
+	Method IsHighScore:Bool()
+		Return True
+	End Method
 			
-'Features (Particles)
-	Method CreateTrail:Void(position:Vec2f,direction:Float)
-		_particles.CreateTrail(position.X,position.Y,direction)
-	End Method
-	Method CreateExplosion:Void(position:Vec2f)
-		_particles.CreateExplosion(position.X,position.Y)
-	End Method
+'Features (Entities)
 	Method CreateShipExplosion:Void(position:Vec2f)
 		For Local count:Int = 0 Until 10
 			Local debris:=New DebrisEntity(position,Rnd(0,360))
 			AddEntity(debris,LAYER_DEBRIS,"debris")
-		Next
-		
+		Next	
 	End Method
-'Rocks
+	
+'Features (Rocks)
 	Method CreateRock:Void(position:Vec2f,size:Int,direction:Int,speed:Float,enabled:Bool=True)
 		Local rock:=New RockEntity(position,size,direction,speed)
 		rock.Enabled=enabled
@@ -271,11 +263,11 @@ Public
 			End
 		Next
 			
-		'Return
+		'Result
 		Return Min(99,count)
 	End
 	
-'Bullets
+'Features (Bullets)
 	Property TotalBullets:Int()
 		Local group:=GetEntityGroup("bullets")
 		If (group=Null) Return 0 
@@ -294,13 +286,13 @@ Private
 		Local counter:Int=0
 
 		'Testing (postion for direct access)
-		'Self.CreateRock(New Vec2f(GAME.Width/2+100,GAME.Height/2),RockSize.Small,Rnd(360),0.0,enabled)
+		'Self.CreateRock(New Vec2f(VirtualResolution.Width/2+100,VirtualResolution.Height/2),RockSize.Small,Rnd(360),0.0,enabled)
 		'Return
 		
 		'Process
 		Repeat 
 			'Get position and validate
-			Local position:=New Vec2f(Rnd(40,GAME.Width-40),Rnd(20,GAME.Height-20))	
+			Local position:=New Vec2f(Rnd(40,VirtualResolution.Width-40),Rnd(20,VirtualResolution.Height-20))	
 			If (Self.InExclusionZone(position)) Continue
 						
 			'Speed (increase base speed each level)

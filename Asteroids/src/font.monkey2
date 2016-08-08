@@ -1,7 +1,14 @@
 
-Global VectorFont:=New FontManager()
+Global VectorFont:=New VectorFontManager()
 
-Class FontManager
+'-----------------------------------------------------------------------------------------------
+' VectorFont usage:
+' - Screen resolution is based on 640x480
+' - All text should be plotted within this resolution
+' - Text will be automatically scaled up using the ResolutionScaler
+'-----------------------------------------------------------------------------------------------
+
+Class VectorFontManager
 Private
 	Field _chars:FontChar[]
 Public
@@ -10,16 +17,15 @@ Public
 		Self.Initialise()
 	End Method 
 	
-	Method DrawFont(canvas:Canvas,text:String,y:Float,scale:Float)
+	Method Write(canvas:Canvas,text:String,y:Float,scale:Float)
 		Local textLength:Float=Self.Length(text.Length,scale)
-		Self.DrawFont(canvas,text,640/2-textLength/2,y,scale)
+		Self.Write(canvas,text,640/2-textLength/2,y,scale)
 	End
 	
-	Method DrawFont:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
+	Method Write:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
 		'Canvas
 		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
-		canvas.Color=GetColor(224,224,224)
-		canvas.Alpha=GetAlpha()
+		canvas.Color=GetColor(224,224,224,GetAlpha())
 
 		'Make uppercase (for now)
 		text=text.ToUpper()
@@ -31,8 +37,8 @@ Public
 						
 			'Draw			
 			For Local point:Int=0 Until char.Points
-				canvas.DrawLine(New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)*ResolutionScaler.Size,
-									New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)*ResolutionScaler.Size)				
+				canvas.DrawLine(New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)*VirtualResolution.Scale,
+									New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)*VirtualResolution.Scale)				
 			Next
 			
 		Next

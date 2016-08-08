@@ -6,7 +6,7 @@ Function GetAlpha:Float()
 End Function
 
 Function GetLineWidth:Float(width:Float)
-	Return Min(3.0,width*ResolutionScaler.Best)
+	Return Min(3.0,width*VirtualResolution.Best)
 End Function
 
 Function GetColor:Color(red:Float,green:Float,blue:Float,alpha:Float=1.0)
@@ -57,28 +57,3 @@ Function GetScreenSize:Vec2i()
 	'Return
 	Return New Vec2i(width,height)
 End
-
-Class Scaler
-Private
-	Field _size:Vec2f
-Public
-	Method New(width:Float,height:Float)
-		_size=New Vec2f(width/640,height/480)
-	End Method
-	
-	Property Size:Vec2f()
-		Return _size
-	End
-	
-	Property Best:Float()
-		Return Min(_size.X,_size.Y)
-	End
-	
-	Property x:Float()
-		Return _size.x
-	End
-	
-	Property y:Float()
-		Return _size.y
-	End
-End Class

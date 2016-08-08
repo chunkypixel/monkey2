@@ -2,7 +2,6 @@
 Const COUNTER_START:Int=45
 
 Class ThumpSound
-
 Private
 	Field _currentThump:Int
 	Field _channel:Channel
