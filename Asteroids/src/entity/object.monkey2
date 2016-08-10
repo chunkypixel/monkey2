@@ -9,7 +9,6 @@ Private
 	Field _visible:Bool
 	Field _enabled:Bool
 Public
-	Field State:GameState
 
 	Method New()
 		_scale=New Vec2f(1.0,1.0)

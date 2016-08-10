@@ -1,4 +1,19 @@
 
+Class Debris
+	
+	Function Create:Void(position:Vec2f)
+		For Local count:Int = 0 Until 10
+			Local debris:=New DebrisEntity(position,Rnd(0,360))
+			AddEntity(debris,LAYER_DEBRIS,"debris")
+		Next		
+	End Function
+	
+	Function Remove:Void()
+		ClearEntityGroup("debris")	
+	End Function
+
+End Class
+
 Class DebrisEntity Extends VectorEntity
 Private
 	Field _rotationSpeed:Float
@@ -24,10 +39,10 @@ Public
 	End Method
 	
 Private
-	Method Initialise(direction:Float)
+	Method Initialise:Void(direction:Float)
 		'Points
-		Self.AddPoint(0,0)
-		Self.AddPoint(1,Int(Rnd(4,10)))
+		Self.CreatePoint(0,0)
+		Self.CreatePoint(1,Int(Rnd(4,10)))
 		
 		'Other
 		Self.Speed=Rnd(0.5,1.25)

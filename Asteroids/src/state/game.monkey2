@@ -1,8 +1,4 @@
-Const LAYER_CAMERA:Int=0
-Const LAYER_ROCKS:Int=1
-Const LAYER_BULLETS:Int=2
-Const LAYER_PLAYER:Int=3
-Const LAYER_DEBRIS:Int=4
+Global Camera:CameraEntity
 
 Enum GameStatus
 	GetReady=0
@@ -10,42 +6,37 @@ Enum GameStatus
 	GameOver=2
 End
 
-Class GameState Extends BaseState
-
+Class GameState Extends StateBase
 Private
-	Field _camera:CameraEntity
-	Field _maxRocks:Int
 	Field _highScore:Int=0
-	Field _shipLives:ShipEntity
-	Field _status:GameStatus=GameStatus.GetReady
+	Field _status:GameStatus
 	Field _counter:CounterTimer
 Public
-	Field Player:PlayerEntity
-	Field Thump:ThumpSound
 		
 	Method Enter:Void() Override
 		'Create/reset stuff
-		_maxRocks=4
+		Rocks.MaxRocks=4
 
 		'Starfield
 		Starfield.Speed=0.05
 		Starfield.Rotation=0.0
-			
-		'Initialise
-		Self.CreatePlayer()
-		Self.CreateRocks()
-		Self.CreateThump()
-		_shipLives=New ShipEntity()
-		
+
 		'Camera (for shaking)
+		Camera=New CameraEntity()
 		Local anchor:Entity=New Entity()
-		'NOTE: Must be actual screen not virtual
-		anchor.ResetPosition(GAME.Width/2,GAME.Height/2)
+		anchor.ResetPosition(GAME.Width/2,GAME.Height/2) 'NOTE: Must be actual screen not virtual
 		AddEntity(anchor,LAYER_CAMERA)
-		_camera=New CameraEntity()
-		AddEntity(_camera,LAYER_CAMERA)
-		_camera.Target=anchor
-		_camera.SnapToTarget()
+		AddEntity(Camera,LAYER_CAMERA)
+		Camera.Target=anchor
+		Camera.SnapToTarget()
+				
+		'Player
+		Player=New PlayerEntity()
+		AddEntity(Player,LAYER_PLAYER)
+		ShipLives=New ShipEntity()
+			
+		'Rocks
+		Rocks.Create()
 		
 		'State
 		_status=GameStatus.GetReady
@@ -54,9 +45,9 @@ Public
 
 	Method Leave:Void() Override
 		'Tidup/save stuff
-		_shipLives=Null
-		Self.Thump=Null
-		Self.Player=Null
+		ShipLives=Null
+		Player=Null
+		Camera=Null
 		RemoveAllEntities()
 	End Method
 
@@ -65,7 +56,7 @@ Public
 		Super.Update()
 			
 		'Update
-		Self.Thump.Update()
+		Thump.Update()
 		
 		'Validate
 		Select _status
@@ -73,11 +64,11 @@ Public
 				'Start game?
 				If (_counter.Elapsed)	
 					_status=GameStatus.Play				
-					Self.Player.Enabled=True
+					Player.Enabled=True
 				End			
 			Case GameStatus.Play
 				'Game over?
-				If (Not Self.Player.Enabled) 
+				If (Not Player.Enabled) 
 					_status=GameStatus.GameOver
 					_counter.Reset()	
 					Return			
@@ -138,178 +129,32 @@ Public
 		'Length 7.5 - 1.5
 
 		'Lives?
-		Local lives:Int=Clamp(Self.Player.Lives,0,7)
+		Local lives:Int=Clamp(Player.Lives,0,7)
 		If (lives>0)
 			'Prepare
 			Local x:Int=154-(MAX_LIVES-1)*15
 
 			'Process
 			For Local count:Int=1 To lives
-				_shipLives.Position=New Vec2f(x,35)
-				_shipLives.Render(canvas)
+				ShipLives.Position=New Vec2f(x,35)
+				ShipLives.Render(canvas)
 				x+=15
 			Next
 		End
 		
 		'Level
-		Local level:String="0"+Self.Player.Level
+		Local level:String="0"+Player.Level
 		VectorFont.Write(canvas,level.Right(2),170,10,1.5)
 		'Remaining
-		Local remaining:String="0"+Self.PotentialRocks
+		Local remaining:String="0"+Rocks.Potential()
 		VectorFont.Write(canvas,remaining.Right(2),190,10,1.5)
 				
 		'Note
 		VectorFont.Write(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",VirtualResolution.Height-20,1.0)		
 	End Method
 
-'Features (General)
-	Method IncrementLevel:Void()
-		'Rocks start at 4 and increment 2 each level until a max of 11
-
-		'Increment
-		Self.Player.Level+=1
-		_maxRocks+=2
-		_maxRocks=Min(_maxRocks,11)
-		
-		'Restart
-		Self.CreateRocks(True)
-	End Method
-			
-	Method Shake:Void(radius:Float=2)
-		If (SHAKE_ON_EXPLOSION) _camera.Shake(radius*VirtualResolution.Best)
-	End Method
-
-	Method InExclusionZone:Bool(entity:Entity)
-		Return Self.InExclusionZone(entity.Position) 		
-	End
-	Method InExclusionZone:Bool(position:Vec2f)
-		return (position.X>VirtualResolution.Width/2-120 And position.X<VirtualResolution.Width/2+120 And position.Y>VirtualResolution.Height/2-100 And position.Y<VirtualResolution.Height/2+100) 		
-	End	
-	
 	Method IsHighScore:Bool()
 		Return True
 	End Method
 			
-'Features (Entities)
-	Method CreateShipExplosion:Void(position:Vec2f)
-		For Local count:Int = 0 Until 10
-			Local debris:=New DebrisEntity(position,Rnd(0,360))
-			AddEntity(debris,LAYER_DEBRIS,"debris")
-		Next	
-	End Method
-	
-'Features (Rocks)
-	Method CreateRock:Void(position:Vec2f,size:Int,direction:Int,speed:Float,enabled:Bool=True)
-		Local rock:=New RockEntity(position,size,direction,speed)
-		rock.Enabled=enabled
-		AddEntity(rock,LAYER_ROCKS,"rocks")
-	End Method
-	
-	Method SplitRock:Void(rock:RockEntity)
-		'NOTES: Rocks continue to same general direction
-		'       One rock appears to be move faster than other
-		'       There can only ever be a max of 26 rocks
-				
-		'Can split?
-		If (rock.Size<RockSize.Small)
-			For Local count:Int=1 To 2
-				'Validate (allow exiting block to process if at limit)
-				If (count>1 And Self.TotalRocks>=26) Continue 
-
-				'Direction (seperate) 
-				Local direction:Int=rock.Direction
-				If (count=1) direction-=Rnd(5,25)
-				If (count=2) direction+=Rnd(10,40)
-				
-				'Speed
-				Local speed:Float=rock.Speed+0.50
-				If (count=1) speed-=0.25	'Reduce some
-				
-				'Create
-				Self.CreateRock(rock.Position,rock.Size+1,direction,speed)
-			Next
-		End	
-		
-		'Remove parent rock
-		Self.RemoveRock(rock)
-	End Method
-	
-	Method RemoveRock:Void(rock:RockEntity)
-		RemoveEntity(rock)
-	End Method
-	
-	Property TotalRocks:Int()
-		Local group:=GetEntityGroup("rocks")
-		If (group=Null) Return 0 
-		Return group.Entities.Count()
-	End
-	
-	Property PotentialRocks:Int()
-		'Validate
-		Local group:=GetEntityGroup("rocks")
-		If (group=Null) Return 0 
-		
-		'Process
-		Local count:Int=0
-		For Local entity:=Eachin group.Entities
-			Local rock:=Cast<RockEntity>(entity)
-			Select rock.Size
-				Case RockSize.Big
-					count+=7
-				Case RockSize.Medium
-					count+=3
-				Case RockSize.Small
-					count+=1
-			End
-		Next
-			
-		'Result
-		Return Min(99,count)
-	End
-	
-'Features (Bullets)
-	Property TotalBullets:Int()
-		Local group:=GetEntityGroup("bullets")
-		If (group=Null) Return 0 
-		Return group.Entities.Count()
-	End
-	
-Private
-	Method CreatePlayer:Void()
-		Player=New PlayerEntity()
-		Player.State=Self
-		AddEntity(Player,LAYER_PLAYER)
-	End Method
-
-	Method CreateRocks:Void(enabled:Bool=False)
-		'Prepare
-		Local counter:Int=0
-
-		'Testing (postion for direct access)
-		'Self.CreateRock(New Vec2f(VirtualResolution.Width/2+100,VirtualResolution.Height/2),RockSize.Small,Rnd(360),0.0,enabled)
-		'Return
-		
-		'Process
-		Repeat 
-			'Get position and validate
-			Local position:=New Vec2f(Rnd(40,VirtualResolution.Width-40),Rnd(20,VirtualResolution.Height-20))	
-			If (Self.InExclusionZone(position)) Continue
-						
-			'Speed (increase base speed each level)
-			Local speed:Float=0.75+Min(Self.Player.Level*0.1,1.0)
-			If (Int(Rnd(0,2)>=1)) speed-=0.35	'Reduce some
-			
-			'Create
-			Self.CreateRock(position,RockSize.Big,Rnd(360),speed,enabled)
-			
-			'Increment
-			counter+=1
-		Until (counter=_maxRocks)
-	End Method	
-	
-	Method CreateThump:Void()
-		Self.Thump=New ThumpSound()	
-		Self.Thump.State=Self
-	End Method
-	
 End Class

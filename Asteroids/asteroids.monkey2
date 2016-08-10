@@ -45,15 +45,22 @@ Const TITLE_STATE:Int=0
 Const GAME_STATE:Int=1
 Const HIGHSCORE_STATE:Int=2
 
+'Game layers
+Const LAYER_CAMERA:Int=0
+Const LAYER_ROCKS:Int=1
+Const LAYER_BULLETS:Int=2
+Const LAYER_PLAYER:Int=3
+Const LAYER_DEBRIS:Int=4
+
 Const TITLE:String="ASTEROIDS 2K"
-Const VERSION:String="0.4 08.08.2016"
+Const VERSION:String="0.5 10.08.2016"
 
 Function Main()
 	New AppInstance
 	
 	'Settings
-	LoadSettings()
-	'SaveSettings()
+	Settings.Load()
+	Settings.Save()
 	
 	'Create game
 	Local screenSize:Vec2i=GetScreenSize()
@@ -71,11 +78,15 @@ Class AsteroidsGame Extends Game2d
 		'Initialise display
 		Self.Layout="stretch"
 		Self.GameResolution=New Vec2i(width,height)
-		VirtualResolution=New ResolutionScaler(width,height)
 		Self.ClearColor=New Color(0,0,0)
 		Self.TextureFilterEnabled=False
+		Self.VSync=VSYNC
 		Style.BackgroundColor=GetColor(0,0,0)
 		Style.DefaultFont=Font.Load("asset::arcade.ttf",10)
+		
+		'Virtual resolution
+		'Internally display run @ 640x480
+		VirtualResolution=New ResolutionScaler(width,height)
 				
 		'Debugger
 		Self.Debug=False

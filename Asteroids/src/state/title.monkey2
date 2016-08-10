@@ -6,10 +6,10 @@ Enum TitleStatus
 	Points
 End
 
-Class TitleState Extends BaseState
+Class TitleState Extends StateBase
 
 Private
-	Field _status:Int
+	Field _status:Int	'TitleStatus
 	Field _counterTimer:CounterTimer
 Public
 

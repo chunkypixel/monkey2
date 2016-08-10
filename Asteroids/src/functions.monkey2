@@ -6,7 +6,7 @@ Function GetAlpha:Float()
 End Function
 
 Function GetLineWidth:Float(width:Float)
-	Return Min(3.0,width*VirtualResolution.Best)
+	Return Min(3.5,width*VirtualResolution.Best)
 End Function
 
 Function GetColor:Color(red:Float,green:Float,blue:Float,alpha:Float=1.0)
@@ -33,6 +33,13 @@ Function PlaySoundEffect:Channel(name:String,volume:Float=0.25,rate:Float=1.0,lo
 	channel.Rate=rate
 	Return channel
 End
+
+Function InExclusionZone:Bool(entity:Entity)
+	Return InExclusionZone(entity.Position) 		
+End Function
+Function InExclusionZone:Bool(position:Vec2f)
+	Return (position.X>VirtualResolution.Width/2-120 And position.X<VirtualResolution.Width/2+120 And position.Y>VirtualResolution.Height/2-100 And position.Y<VirtualResolution.Height/2+100) 		
+End	Function
 
 Function GetScreenSize:Vec2i()
 	Local width:Int=1024

@@ -1,5 +1,5 @@
 
-Class BaseState Extends State
+Class StateBase Extends State
 
 Private
 	Field _flashCounter:CounterTimer

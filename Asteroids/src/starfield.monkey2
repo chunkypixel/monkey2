@@ -71,7 +71,7 @@ Public
 	End
 	
 Private
-	Method Initialise()
+	Method Initialise:Void()
 		'Initialise
 		_points=New StarfieldPoint[_maxStars]			
 		For Local t:Int=0 To _maxStars-1

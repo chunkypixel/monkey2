@@ -1,17 +1,42 @@
 
+Class Bullets
+
+	Function TotalBullets:Int()
+		Local group:=GetEntityGroup("bullets")
+		If (group=Null) Return 0 
+		Return group.Entities.Count()
+	End Function
+	
+	Function Create:Void(owner:ObjectEntity,position:Vec2f,rotation:Float)
+		'Validate
+		If (TotalBullets()<4) 
+			'Create bullet
+			Local bullet:=New BulletEntity(owner,position,rotation)
+			AddEntity(bullet,LAYER_BULLETS)
+			AddEntityToGroup(bullet,"bullets")
+			
+			'Sound
+			PlaySoundEffect("Fire")
+		End
+	End Function
+	
+	Function Remove(bullet:BulletEntity)
+		RemoveEntity(bullet)
+	End Function
+	
+End Class
+
 Class BulletEntity Extends VectorEntity
 
 Private
 	Field _active:Int=45
+	Field _owner:ObjectEntity
 Public
 
-	Method New(position:Vec2f,direction:Float)
+	Method New(owner:ObjectEntity,position:Vec2f,direction:Float)
 		'Create
-		Self.Initialise()
+		Self.Initialise(owner,direction)
 		
-		'Direction
-		Self.Direction=direction
-
 		'Position (offset from tip)
 		Local radian:=DegreesToRadians(direction)
 		position.X+=Cos(radian)*8
@@ -27,9 +52,12 @@ Public
 		'Remove?
 		 _active-=1
 		If (_active=0)
-			RemoveEntity(Self)
+			Bullets.Remove(Self)
 			Return
 		End
+
+		'Prepare
+		Local state:GameState=Cast<GameState>(GAME.GetState(GAME_STATE))
 
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
@@ -44,16 +72,16 @@ Public
 			If (rock.CheckCollision(Self)) 
 				'Explode (and shake)
 				Particles.CreateExplosion(rock.Position,rock.Size)
-				Self.State.Shake()
+				Camera.Shake(2.0)
 				
 				'Score
 				Local score:Int=20
 				If (rock.Size=RockSize.Medium) score=50
 				If (rock.Size=RockSize.Small) score=100
-				Self.State.Player.Score+=score
+				Player.Score+=score
 				
 				'Split
-				Self.State.SplitRock(rock)
+				Rocks.Split(rock)
 				
 				'Sound
 				PlaySoundEffect("Explode"+Int(Rnd(1,4)))
@@ -71,9 +99,11 @@ Public
 		
 		'Draw (glow)
 		Local image:=GetImage("Particle")
-		canvas.Color=Self.Color
-		canvas.Alpha=GetAlpha()	'Flicker
-		If (image<>Null) canvas.DrawImage(image,Self.Position*VirtualResolution.Scale,0,New Vec2f(0.35,0.35)*VirtualResolution.Scale)						
+		If (image<>Null) 
+			canvas.Color=Self.Color
+			canvas.Alpha=GetAlpha()	'Flicker
+			canvas.DrawImage(image,Self.Position*VirtualResolution.Scale,0,New Vec2f(0.35,0.35)*VirtualResolution.Scale)						
+		End
 		
 		'Reset
 		canvas.Color=Color.White
@@ -87,16 +117,23 @@ Public
 	End Method
 	
 Private
-	Method Initialise()
+	Method Initialise:Void(owner:ObjectEntity,direction:Float)
 		'Points
-		Self.AddPoint(0,0)
-		Self.AddPoint(1,1)
+		Self.CreatePoint(0,0)
+		Self.CreatePoint(1,1)
 		
 		'Color
 		Self.Color=GetColor(224,224,224)
+
+		'Direction
+		Self.Direction=direction
 		
 		'Other
 		Self.Speed=9.0
+		_owner=owner
+		
+		'Reset
+		Self.Reset()	
 	End Method
 	
 End Class

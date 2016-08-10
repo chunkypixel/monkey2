@@ -1,7 +1,6 @@
 
-Class HighScoreState Extends BaseState
+Class HighScoreState Extends StateBase
 Private
-
 Public
 
 	Method Enter:Void() Override

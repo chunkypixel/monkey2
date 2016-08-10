@@ -1,7 +1,9 @@
 
+Global Thump:=New ThumpManager()
+
 Const COUNTER_START:Int=45
 
-Class ThumpSound
+Class ThumpManager
 Private
 	Field _currentThump:Int
 	Field _channel:Channel
@@ -9,7 +11,6 @@ Private
 	Field _delay:CounterTimer
 	Field _running:Bool=False
 Public
-	Field State:GameState
 	
 	Method New()
 		'Initialise
@@ -45,7 +46,7 @@ Public
 Private
 	Method Play:Void()
 		'Prepare
-		Local potentialRocks:Int=Self.State.PotentialRocks
+		Local potentialRocks:Int=Rocks.Potential()
 		
 		'Validate (sound)
 		Local name:String="ThumpHi"

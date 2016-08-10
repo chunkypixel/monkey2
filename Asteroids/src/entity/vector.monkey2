@@ -25,7 +25,7 @@ Public
 		Return _points
 	End
 	
-	Method AddPoint(x:Float,y:Float)
+	Method CreatePoint(x:Float,y:Float)
 		'Set
 		_basePoints[_points].x=x
 		_basePoints[_points].y=y
@@ -49,8 +49,8 @@ Public
 		If (Self.Y<-5) Self.ResetPosition(Self.X,VirtualResolution.Height+5)
 		If (Self.Y>VirtualResolution.Height+5) Self.ResetPosition(Self.X,-5)
 		
-		'Changes?
-		If (_currentScale.X<>Self.Scale.X Or _currentScale.Y<>Self.Scale.Y Or _currentRotation<>Self.Rotation)
+		'Changed?
+		If (_currentScale<>Self.Scale Or _currentRotation<>Self.Rotation)
 			'(Re)Plot
 			Self.PlotPoints()				
 			'Store
@@ -64,7 +64,7 @@ Public
 		If (Not Self.Enabled Or Not Self.Visible) Return
 		
 		'Canvas
-		canvas.LineWidth=GetLineWidth(1.8)	'For now make all lines >1.0 for smoothing
+		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
 		canvas.Color=Self.Color
 			
 		'Prepare
@@ -73,12 +73,15 @@ Public
 		
 		'Process
 		For Local index:Int=1 Until _points
-			'Render
+			'Draw (line)
 			canvas.Alpha=GetAlpha()	'Flicker
 			canvas.DrawLine(dx,dy,(_renderPoints[index].x+Self.X)*VirtualResolution.sx,(_renderPoints[index].y+Self.Y)*VirtualResolution.sy)
+			
+			'Draw (point)
 			canvas.Alpha=0.8
 			canvas.DrawPoint(Int(dx),Int(dy))
-			'Store (for next draw)
+			
+			'Position (for next line)
 			dx=(_renderPoints[index].x+Self.X)*VirtualResolution.sx
 			dy=(_renderPoints[index].y+Self.Y)*VirtualResolution.sy
 		Next
@@ -96,7 +99,7 @@ Public
 		
 	'Comparision between two objects
 	Method OverlapCollision:Bool(entity:VectorEntity)
-		'Process
+		'Process (object)
 		For Local k:Int=0 until entity.Points
 			'Prepare
 			Local ex:Float=entity.RenderPoints[k].x+entity.X
@@ -106,18 +109,20 @@ Public
 			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,ex,ey)) Return True
 		Next
 		
-		'Process (Double check??)
-		For Local k:Int=0 until _points
-			'Prepare
-			Local sx:Float=_renderPoints[k].x+Self.X
-			Local sy:Float=_renderPoints[k].y+Self.Y
-			
-			'Validate
-			If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sx,sy)) Return True
-		Next
+		'Process (point)
+		Return Self.PointInPolyCollision(entity)
 		
+		'Process (Double check??)
+		'For Local k:Int=0 until _points
+		'	'Prepare
+		'	Local sx:Float=_renderPoints[k].x+Self.X
+		'	Local sy:Float=_renderPoints[k].y+Self.Y
+		'	
+		'	'Validate
+		'	If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sx,sy)) Return True
+		'Next
 		'Return
-		Return False	
+		'Return False	
 	End
 	
 	'Comparison between object and point
@@ -137,7 +142,7 @@ Private
 			fx*=Self.Scale.x
 			fy*=Self.Scale.y
 			
-			'Rotation
+			'Rotation?
 			If (Self.Rotation<>0.0)
 				Local radian:=DegreesToRadians(-Self.Rotation)
 				Local rx:Float=Cos(radian)*fx-Sin(radian)*fy

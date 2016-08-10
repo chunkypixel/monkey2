@@ -1,18 +1,19 @@
+Global ShipLives:ShipEntity
 
 Class ShipEntity Extends VectorEntity
 
 	Method New()
-		'Create
+		'Initialise
 		Self.Initialise()
 	End
 	
-	Method Initialise() Virtual
+	Method Initialise:Void() Virtual
 		'Points
-		Self.AddPoint(-8,-8)
-		Self.AddPoint(12,0)
-		Self.AddPoint(-8,8)
-		Self.AddPoint(-5,0)
-		Self.AddPoint(-8,-8)
+		Self.CreatePoint(-8,-8)
+		Self.CreatePoint(12,0)
+		Self.CreatePoint(-8,8)
+		Self.CreatePoint(-5,0)
+		Self.CreatePoint(-8,-8)
 		
 		'Other
 		Self.Rotation=90.0

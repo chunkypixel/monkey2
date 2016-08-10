@@ -1,9 +1,11 @@
+'Initialise as needed
+Global Player:PlayerEntity
 
-Enum PlayerStateFlags
-	Release=1
-	Active=2
-	Complete=3
-	Exploding=4
+Enum PlayerStatus
+	Release=0
+	Active=1
+	Complete=2
+	Exploding=3
 End
 
 Class PlayerEntity Extends ShipEntity
@@ -17,7 +19,7 @@ Private
 	Field _velocity:=New Vec2f
 	Field _thrustChannel:Channel
 	Field _counter:CounterTimer
-	Field _playerState:PlayerStateFlags
+	Field _status:PlayerStatus
 	Field _levelComplete:Bool=False
 Public
 	Field Lives:Int=MAX_LIVES
@@ -39,34 +41,34 @@ Public
 		_velocity=New Vec2f()	
 				
 		'Remove 
-		ClearEntityGroup("debris")
+		Debris.Remove()
 	End Method
 	
 	Method Update:Void() Override
 		'Base
 		If (Not Self.Enabled) Return
 		Super.Update()		
-		
+				
 		'Problem! LAST rock is not removed until next cycle
 		'we need to identify if active or exploding as each cycles differently
 		
 		'Level complete?
-		If (Not _levelComplete And Self.State.TotalRocks=0) 
+		If (Not _levelComplete And Rocks.Total()=0) 
 			'Sound
 			PlaySoundEffect("LevelUp",1.0,2.0)
-			Self.State.Thump.Stop()
+			Thump.Stop()
 			
 			'Set
 			_levelComplete=True
 			_counter.Reset()
 			
-			'Change state?
-			If (_playerState=PlayerStateFlags.Active) _playerState=PlayerStateFlags.Complete
+			'Change?
+			If (_status=PlayerStatus.Active) _status=PlayerStatus.Complete
 		End
 		
-		'State
-		Select _playerState
-			Case PlayerStateFlags.Release
+		'Process
+		Select _status
+			Case PlayerStatus.Release
 				'Prepare
 				Local canRelease:Bool=True		 
 
@@ -74,13 +76,13 @@ Public
 				Local group:=GetEntityGroup("rocks")
 				For Local entity:=Eachin group.Entities
 					'Validate (check zone around player)
-					If (Self.State.InExclusionZone(entity)) canRelease=False
+					If (InExclusionZone(entity)) canRelease=False
 				Next		
 				
 				'Can we release?
 				If (canRelease) 
 					'Set
-					_playerState=PlayerStateFlags.Active
+					_status=PlayerStatus.Active
 					Self.Visible=True
 					
 					'Display rocks (if required)					
@@ -97,9 +99,9 @@ Public
 					PlaySoundEffect("Appear",1.0)
 				End
 				
-			Case PlayerStateFlags.Active				
+			Case PlayerStatus.Active				
 				'Sound?
-				If (Not Self.State.Thump.IsRunning) Self.State.Thump.Start()
+				If (Not Thump.IsRunning) Thump.Start()
 				
 				'Process
 				Self.PlayerMovement()
@@ -111,26 +113,23 @@ Public
 					Local rock:=Cast<RockEntity>(entity)
 					If (rock.CheckCollision(Self)) 
 						'Explode (and shake)
-						Particles.CreateExplosion(Self.Position,rock.Size)
-						Self.State.CreateShipExplosion(Self.Position)
-						Self.State.Shake(10)
+						Self.Destroy(Self.Position,rock.Size)
 						
 						'Split
-						Self.State.SplitRock(rock)
+						Rocks.Split(rock)
 	
 						'Sound
-						PlaySoundEffect("Explode1",0.50)
-						Self.State.Thump.Stop()
+						Thump.Stop()
 						_thrustChannel.Paused=True
 						
 						'Set
-						_playerState=PlayerStateFlags.Exploding
+						_status=PlayerStatus.Exploding
 						Self.Visible=False
 						_counter.Reset()
 					End
 				Next		
 				
-			Case PlayerStateFlags.Exploding	
+			Case PlayerStatus.Exploding	
 				'Game over?
 				If (Self.Lives=0) 
 					Self.Enabled=False
@@ -141,24 +140,24 @@ Public
 				If (_counter.Elapsed) 
 					'Set
 					Self.Reset()
-					_playerState=PlayerStateFlags.Release
+					_status=PlayerStatus.Release
 					
 					'Increment level? (may have exploded on last rock) 			
-					If (_levelComplete) Self.State.IncrementLevel() 							
+					If (_levelComplete) Self.IncrementLevel() 							
 					_levelComplete=False
 				End
 				
-			Case PlayerStateFlags.Complete
+			Case PlayerStatus.Complete
 				'Process
 				Self.PlayerMovement()
 
 				'Restart?
 				If (_counter.Elapsed) 
 					'Set
-					_playerState=PlayerStateFlags.Active
+					_status=PlayerStatus.Active
 					
 					'Increment level
-					Self.State.IncrementLevel() 			
+					Self.IncrementLevel() 			
 					_levelComplete=False
 				End				
 		End
@@ -188,8 +187,8 @@ Private
 		_thrustChannel=PlaySoundEffect("Thrust",0.75,1.0,True)
 		_thrustChannel.Paused=True
 		
-		'State
-		_playerState=PlayerStateFlags.Release
+		'Status
+		_status=PlayerStatus.Release
 	End Method
 		
 	Method PlayerMovement:Void()
@@ -231,24 +230,34 @@ Private
 		End
 		
 		'Fire?
-		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE"))
-			'Validate
-			If (Self.State.TotalBullets<4) 
-				'Create bullet
-				Local bullet:=New BulletEntity(Self.Position,Self.Rotation)
-				bullet.State=Self.State
-				AddEntity(bullet,LAYER_BULLETS)
-				AddEntityToGroup(bullet,"bullets")
-				
-				'Sound
-				PlaySoundEffect("Fire")
-			End
-		End
+		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE")) Bullets.Create(Self,Self.Position,Self.Rotation)
 		
 		'Position
 		_velocity+=acceleration
 		_velocity*=0.99
 		Self.Position+=_velocity
 	End Method
-	
+
+	Method Destroy:Void(position:Vec2f,explostionSize:Int)
+		'Destroy
+		Particles.CreateExplosion(position,explostionSize)
+		Debris.Create(position)
+		Camera.Shake(10.0)
+
+		'Sound
+		PlaySoundEffect("Explode1",0.50)
+	End Method
+
+	Method IncrementLevel:Void()
+		'Rocks start at 4 and increment 2 each level until a max of 11
+
+		'Increment
+		Self.Level+=1
+		Rocks.MaxRocks+=2
+		Rocks.MaxRocks=Min(Rocks.MaxRocks,11)
+		
+		'Restart
+		Rocks.Create(True)
+	End Method
+			
 End Class

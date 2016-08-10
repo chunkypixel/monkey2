@@ -19,7 +19,7 @@ Public
 	
 	Method Write(canvas:Canvas,text:String,y:Float,scale:Float)
 		Local textLength:Float=Self.Length(text.Length,scale)
-		Self.Write(canvas,text,640/2-textLength/2,y,scale)
+		Self.Write(canvas,text,VirtualResolution.Width/2-textLength/2,y,scale)
 	End
 	
 	Method Write:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
@@ -35,10 +35,14 @@ Public
 			'Prepare
 			Local char:FontChar=_chars[text.Mid(index,1)[0]]
 						
-			'Draw			
+			'Process
 			For Local point:Int=0 Until char.Points
-				canvas.DrawLine(New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)*VirtualResolution.Scale,
-									New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)*VirtualResolution.Scale)				
+				'Position
+				Local v0:=New Vec2f(char.RenderPoints[point].x1*scale+x+scale*5*index,char.RenderPoints[point].y1*scale+y)*VirtualResolution.Scale
+				Local v1:=New Vec2f(char.RenderPoints[point].x2*scale+x+scale*5*index,char.RenderPoints[point].y2*scale+y)*VirtualResolution.Scale
+				
+				'Draw (line)
+				canvas.DrawLine(v0,v1)				
 			Next
 			
 		Next
@@ -527,13 +531,6 @@ Private
 	Field _renderPoints:VectorChar[]
 Public
 	
-	Property RenderPoints:VectorChar[]()
-		Return _renderPoints
-	End
-	Property Points:Int()
-		Return _points
-	End
-	
 	Method New()
 		_renderPoints=New VectorChar[8]
 	End
@@ -545,6 +542,15 @@ Public
 		_renderPoints[_points].y2=y2
 		_points+=1
 	End
+
+'Properties	
+	Property RenderPoints:VectorChar[]()
+		Return _renderPoints
+	End
+	Property Points:Int()
+		Return _points
+	End
+	
 End Class
 
 Struct VectorChar
