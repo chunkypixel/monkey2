@@ -22,7 +22,7 @@ Public
 		
 		'Validate
 		If (_flashCounter.Elapsed)
-			_flashCounter.Reset()
+			_flashCounter.Restart()
 			Self.FlashState=Not Self.FlashState
 		End
 	End

@@ -21,7 +21,7 @@ Public
 	Method Enter:Void() Override
 		'Create/reset stuff
 		_status=TitleStatus.Title
-		_counterTimer.Reset()
+		_counterTimer.Restart()
 				
 		'Starfield
 		Starfield.Speed=0.5
@@ -39,7 +39,7 @@ Public
 		'Cycle status
 		If (_counterTimer.Elapsed) 
 			_status=(_status+1) Mod 3
-			_counterTimer.Reset()
+			_counterTimer.Restart()
 		End
 		
 		'Start game?

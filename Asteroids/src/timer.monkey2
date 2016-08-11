@@ -54,7 +54,7 @@ Public
 		End
 	End
 	
-	Method Reset:Void()
+	Method Restart:Void()
 		_counter=0
 		Self.Enabled=True
 		Self.Elapsed=False
@@ -70,5 +70,9 @@ Public
 	
 	Property Counter:Int()
 		Return _counter
+	End
+	
+	Property IsRunning:Bool()
+		Return (Self.Enabled Or Self.Elapsed)
 	End
 End Class

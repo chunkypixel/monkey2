@@ -53,14 +53,14 @@ Public
 		'we need to identify if active or exploding as each cycles differently
 		
 		'Level complete?
-		If (Not _levelComplete And Rocks.Total()=0) 
+		If (Not _levelComplete And Rocks.Remaining()=0 And Not UFO.Released) 
 			'Sound
 			PlaySoundEffect("LevelUp",1.0,2.0)
 			Thump.Stop()
 			
 			'Set
 			_levelComplete=True
-			_counter.Reset()
+			_counter.Restart()
 			
 			'Change?
 			If (_status=PlayerStatus.Active) _status=PlayerStatus.Complete
@@ -108,26 +108,30 @@ Public
 														
 				'Collision with rocks?
 				Local group:=GetEntityGroup("rocks")
-				For Local entity:=Eachin group.Entities
-					'Validate
-					Local rock:=Cast<RockEntity>(entity)
-					If (rock.CheckCollision(Self)) 
-						'Explode (and shake)
-						Self.Destroy(Self.Position,rock.Size)
-						
-						'Split
-						Rocks.Split(rock)
+				If (group<>Null) 
+					For Local entity:=Eachin group.Entities
+						'Validate
+						Local rock:=Cast<RockEntity>(entity)
+						If (rock.CheckCollision(Self)) 
+							'Explode (and shake)
+							Self.Destroy(Self.Position,rock.Size)
+							
+							'Split
+							Rocks.Split(rock)
+		
+							'Sound
+							Thump.Stop()
+							_thrustChannel.Paused=True
 	
-						'Sound
-						Thump.Stop()
-						_thrustChannel.Paused=True
-						
-						'Set
-						_status=PlayerStatus.Exploding
-						Self.Visible=False
-						_counter.Reset()
-					End
-				Next		
+							'Set
+							_status=PlayerStatus.Exploding
+							Self.Visible=False
+							_counter.Restart()
+						End
+					Next	
+				End
+				
+				'Collision with UFO?	
 				
 			Case PlayerStatus.Exploding	
 				'Game over?
@@ -238,9 +242,9 @@ Private
 		Self.Position+=_velocity
 	End Method
 
-	Method Destroy:Void(position:Vec2f,explostionSize:Int)
+	Method Destroy:Void(position:Vec2f,explosionSize:Int)
 		'Destroy
-		Particles.CreateExplosion(position,explostionSize)
+		Particles.CreateExplosion(position,explosionSize)
 		Debris.Create(position)
 		Camera.Shake(10.0)
 
@@ -255,6 +259,9 @@ Private
 		Self.Level+=1
 		Rocks.MaxRocks+=2
 		Rocks.MaxRocks=Min(Rocks.MaxRocks,11)
+		
+		'UFO
+		UFO.Restart()
 		
 		'Restart
 		Rocks.Create(True)

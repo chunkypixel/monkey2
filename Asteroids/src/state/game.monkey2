@@ -32,20 +32,25 @@ Public
 				
 		'Player
 		Player=New PlayerEntity()
-		AddEntity(Player,LAYER_PLAYER)
+		AddEntity(Player,LAYER_PLAYER,"player")
 		ShipLives=New ShipEntity()
 			
 		'Rocks
 		Rocks.Create()
 		
+		'UFO
+		UFO=New UFOEntity()
+		AddEntity(UFO,LAYER_UFO,"ufo")
+		
 		'State
 		_status=GameStatus.GetReady
-		_counter=New CounterTimer(250)	
+		_counter=New CounterTimer(250)
 	End Method
 
 	Method Leave:Void() Override
 		'Tidup/save stuff
 		ShipLives=Null
+		UFO=Null
 		Player=Null
 		Camera=Null
 		RemoveAllEntities()
@@ -65,17 +70,22 @@ Public
 				If (_counter.Elapsed)	
 					_status=GameStatus.Play				
 					Player.Enabled=True
-				End			
+					UFO.Enabled=True
+				End	
+						
 			Case GameStatus.Play
 				'Game over?
 				If (Not Player.Enabled) 
 					_status=GameStatus.GameOver
-					_counter.Reset()	
+					_counter.Restart()	
+					UFO.Enabled=False
 					Return			
-				End											
+				End		
+				
 			Case GameStatus.GameOver
 				'Exit game?
 				If (_counter.Elapsed) 
+					'Validate
 					If (Self.IsHighScore())
 						GAME.EnterState(HIGHSCORE_STATE,New TransitionFadein,New TransitionFadeout)				
 					Else
@@ -146,7 +156,7 @@ Public
 		Local level:String="0"+Player.Level
 		VectorFont.Write(canvas,level.Right(2),170,10,1.5)
 		'Remaining
-		Local remaining:String="0"+Rocks.Potential()
+		Local remaining:String="0"+Rocks.Remaining()
 		VectorFont.Write(canvas,remaining.Right(2),190,10,1.5)
 				
 		'Note

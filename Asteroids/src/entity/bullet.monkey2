@@ -1,29 +1,29 @@
 
 Class Bullets
 
-	Function TotalBullets:Int()
+	Function Create:Void(owner:ObjectEntity,position:Vec2f,rotation:Float)
+		'Validate
+		If (Total()>4) Return
+		 
+		'Create bullet
+		Local bullet:=New BulletEntity(owner,position,rotation)
+		AddEntity(bullet,LAYER_BULLETS)
+		AddEntityToGroup(bullet,"bullets")
+		
+		'Sound
+		PlaySoundEffect("Fire")
+	End Function
+	
+	Function Remove:Void(bullet:BulletEntity)
+		RemoveEntity(bullet)
+	End Function
+
+	Function Total:Int()
 		Local group:=GetEntityGroup("bullets")
 		If (group=Null) Return 0 
 		Return group.Entities.Count()
 	End Function
-	
-	Function Create:Void(owner:ObjectEntity,position:Vec2f,rotation:Float)
-		'Validate
-		If (TotalBullets()<4) 
-			'Create bullet
-			Local bullet:=New BulletEntity(owner,position,rotation)
-			AddEntity(bullet,LAYER_BULLETS)
-			AddEntityToGroup(bullet,"bullets")
-			
-			'Sound
-			PlaySoundEffect("Fire")
-		End
-	End Function
-	
-	Function Remove(bullet:BulletEntity)
-		RemoveEntity(bullet)
-	End Function
-	
+		
 End Class
 
 Class BulletEntity Extends VectorEntity
@@ -66,31 +66,40 @@ Public
 		
 		'Collision with rocks?
 		Local group:=GetEntityGroup("rocks")
-		For Local entity:=Eachin group.Entities
-			'Validate
-			Local rock:=Cast<RockEntity>(entity)
-			If (rock.CheckCollision(Self)) 
-				'Explode (and shake)
-				Particles.CreateExplosion(rock.Position,rock.Size)
-				Camera.Shake(2.0)
-				
-				'Score
-				Local score:Int=20
-				If (rock.Size=RockSize.Medium) score=50
-				If (rock.Size=RockSize.Small) score=100
-				Player.Score+=score
-				
-				'Split
-				Rocks.Split(rock)
-				
-				'Sound
-				PlaySoundEffect("Explode"+Int(Rnd(1,4)))
-
-				'Finalise				
-				RemoveEntity(Self)
-				Return
-			End
-		Next			
+		If (group<>Null)
+			For Local entity:=Eachin group.Entities
+				'Validate
+				Local rock:=Cast<RockEntity>(entity)
+				If (rock.CheckCollision(Self)) 
+					'Explode (and shake)
+					Particles.CreateExplosion(rock.Position,rock.Size)
+					Camera.Shake(2.0)
+					
+					'Score
+					Local score:Int=20
+					If (rock.Size=RockSize.Medium) score=50
+					If (rock.Size=RockSize.Small) score=100
+					Player.Score+=score
+					
+					'Split
+					Rocks.Split(rock)
+					
+					'Sound
+					PlaySoundEffect("Explode"+Int(Rnd(1,4)))
+	
+					'Finalise				
+					RemoveEntity(Self)
+					Return
+				End
+			Next
+		End
+		
+		'Collision with UFO?
+		If (UFO.Visible And UFO.CheckCollision(Self)) 
+			'Remove
+			UFO.Destroy()
+		End
+							
 	End Method
 	
 	Method Render:Void(canvas:Canvas) Override

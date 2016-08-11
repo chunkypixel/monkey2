@@ -15,6 +15,7 @@
 #Import "src/entity/vector"
 #Import "src/entity/ship"
 #Import "src/entity/player"
+#Import "src/entity/ufo"
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
 #Import "src/entity/debris"
@@ -31,6 +32,8 @@
 #Import "assets/snd/levelup.wav"
 #Import "assets/snd/thumphi.wav"
 #Import "assets/snd/thumplo.wav"
+#Import "assets/snd/lsaucer.wav"
+#Import "assets/snd/ssaucer.wav"
 
 'System
 #Import "<std>"
@@ -48,9 +51,10 @@ Const HIGHSCORE_STATE:Int=2
 'Game layers
 Const LAYER_CAMERA:Int=0
 Const LAYER_ROCKS:Int=1
-Const LAYER_BULLETS:Int=2
-Const LAYER_PLAYER:Int=3
-Const LAYER_DEBRIS:Int=4
+Const LAYER_UFO:Int=2
+Const LAYER_BULLETS:Int=3
+Const LAYER_PLAYER:Int=4
+Const LAYER_DEBRIS:Int=5
 
 Const TITLE:String="ASTEROIDS 2K"
 Const VERSION:String="0.5 10.08.2016"
@@ -124,6 +128,8 @@ Class AsteroidsGame Extends Game2d
 		AddSound("LevelUp","asset::levelup.wav")
 		AddSound("ThumpHi","asset::thumphi.wav")
 		AddSound("ThumpLo","asset::thumplo.wav")
+		AddSound("LSaucer","asset::lsaucer.wav")
+		AddSound("SSaucer","asset::ssaucer.wav")
 		
 		'Create states
 		AddState(New TitleState,TITLE_STATE)

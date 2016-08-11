@@ -23,7 +23,7 @@ Public
 	#Rem monkeydoc Returns or sets the entity visibility flag.
 	When set to False, the entity is not rendered.
 	#End
-	Property Visible:Bool()
+	Property Visible:Bool() Virtual
 		Return _visible
 	Setter( value:Bool )
 		_visible=value
@@ -32,7 +32,7 @@ Public
 	#Rem monkeydoc Returns or sets the entity enabled flag.
 	When set to False, the entity is not updated or rendered.
 	#End
-	Property Enabled:Bool()
+	Property Enabled:Bool() Virtual
 		Return _enabled
 	Setter( value:Bool )
 		_enabled=value

@@ -1,7 +1,7 @@
 
 Global Thump:=New ThumpManager()
 
-Const COUNTER_START:Int=45
+Const THUMP_COUNTERSTART:Int=45
 
 Class ThumpManager
 Private
@@ -14,7 +14,7 @@ Public
 	
 	Method New()
 		'Initialise
-		_delay=New CounterTimer(COUNTER_START)
+		_delay=New CounterTimer(THUMP_COUNTERSTART)
 	End
 	
 	Method Update:Void()
@@ -46,22 +46,22 @@ Public
 Private
 	Method Play:Void()
 		'Prepare
-		Local potentialRocks:Int=Rocks.Potential()
+		Local remainingRocks:Int=Rocks.Remaining()
 		
 		'Validate (sound)
 		Local name:String="ThumpHi"
 		If (_currentThump=1) name="ThumpLo"
 
 		'Validate (delay)
-		_delay.Interval=COUNTER_START
-		If (potentialRocks<=15)	_delay.Interval=(COUNTER_START-(15-potentialRocks)*2)			
+		_delay.Interval=THUMP_COUNTERSTART
+		If (remainingRocks<=15)	_delay.Interval=(THUMP_COUNTERSTART-(15-remainingRocks)*2)			
 		
 		'Sound
 		_channel=PlaySoundEffect(name)
 		_channel.Rate=_rate
 		
 		'Start
-		_delay.Reset()
+		_delay.Restart()
 	End Method
 	
 End Class

@@ -1,5 +1,4 @@
 
-'Size
 Enum RockSize
 	Big=1
 	Medium=2
@@ -51,7 +50,7 @@ Class Rocks
 		If (rock.Size<RockSize.Small)
 			For Local count:Int=1 To 2
 				'Validate (allow exiting block to process if at limit)
-				If (count>1 And Total()>=26) Continue 
+				If (count>1 And OnScreen()>=26) Continue 
 	
 				'Direction (seperate) 
 				Local direction:Int=rock.Direction
@@ -75,13 +74,13 @@ Class Rocks
 		RemoveEntity(rock)
 	End Function
 		
-	Function Total:Int()
+	Function OnScreen:Int()
 		Local group:=GetEntityGroup("rocks")
 		If (group=Null) Return 0 
 		Return group.Entities.Count()
 	End Function
 		
-	Function Potential:Int()
+	Function Remaining:Int()
 		'Validate
 		Local group:=GetEntityGroup("rocks")
 		If (group=Null) Return 0 
@@ -110,8 +109,8 @@ Class RockEntity Extends VectorEntity
 
 Private
 	Field _rotationSpeed:Float
+	Field _size:Int=0
 Public
-	Field Size:Int=0
 	
 	Method New(position:Vec2f,size:Int,direction:Int,speed:Float)
 		'Create
@@ -131,8 +130,13 @@ Public
 		Local radian:=DegreesToRadians(Self.Direction)
 		Self.X+=Cos(radian)*Self.Speed
 		Self.Y+=-Sin(radian)*Self.Speed
+				
 	End Method
-
+	
+	Property Size:Int()
+		Return _size
+	End
+	
 Private
 	Method Initialise:Void(size:Int,direction:Float,speed:Float)
 		'Rock
@@ -178,7 +182,7 @@ Private
 				Self.CreatePoint(-4,15)
 				Self.CreatePoint(-9,20)
 				Self.CreatePoint(-20,11)
-				Self.CreatePoint(-14,0)							
+				Self.CreatePoint(-15,0)							
 			Case 3
 				Self.CreatePoint(-20,-11)
 				Self.CreatePoint(-8,-20)
@@ -203,7 +207,7 @@ Private
 			Default
 				Self.Scale=New Vec2f(0.25,0.25)					
 		End Select
-		Self.Size=size
+		_size=size
 
 		'Direction
 		If (direction<0) direction+=360
