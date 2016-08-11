@@ -1,0 +1,4 @@
+Changes to Ted2:
+
+mojox\textview.monkey2 (AdamStrange)
+- Double-click of text
