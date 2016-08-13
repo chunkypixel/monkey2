@@ -1,4 +1,7 @@
 Changes to Ted2:
 
+mx2document.monkey
+- Gutter color
+
 mojox\textview.monkey2 (AdamStrange)
 - Double-click of text

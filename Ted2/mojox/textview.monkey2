@@ -1122,7 +1122,7 @@ Class TextView Extends View
 			p.x=0
 			Local cursor:Int=PointToIndex(p)	
 			Local text:String=_doc.Text.Slice(cursor,cursor+length )
-			Local alpha:String="abcdefghijklmnopqrstuvwxyz.#'0123456789"
+			Local alpha:String="abcdefghijklmnopqrstuvwxyz.#_'0123456789"
 			Local startPos:Int=(_cursor-cursor)
 			Local endPos:Int=startPos
 			
@@ -1154,7 +1154,7 @@ Class TextView Extends View
 				_cursor+=pos
 
 			Else
-				local search:string="abcdefghijklmnopqrstuvwxyz#'0123456789"
+				local search:string="abcdefghijklmnopqrstuvwxyz#_'0123456789"
 				local mark:Int=False
   
 				'Select line?
