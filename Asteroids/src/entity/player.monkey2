@@ -105,34 +105,16 @@ Public
 				
 				'Process
 				Self.PlayerMovement()
-														
-				'Collision with rocks?
-				Local group:=GetEntityGroup("rocks")
-				If (group<>Null) 
-					For Local entity:=Eachin group.Entities
-						'Validate
-						Local rock:=Cast<RockEntity>(entity)
-						If (rock.CheckCollision(Self)) 
-							'Explode (and shake)
-							Self.Destroy(Self.Position,rock.Size)
-							
-							'Split
-							Rocks.Split(rock)
-		
-							'Sound
-							Thump.Stop()
-							_thrustChannel.Paused=True
-	
-							'Set
-							_status=PlayerStatus.Exploding
-							Self.Visible=False
-							_counter.Restart()
-						End
-					Next	
-				End
-				
+																		
 				'Collision with UFO?	
-				
+				If (UFO.Visible And UFO.CheckCollision(Self)) 
+					'Explode (and shake)
+					Self.Destroy(2)	'Medium
+					
+					'Remove
+					UFO.Destroy()
+				End
+					
 			Case PlayerStatus.Exploding	
 				'Game over?
 				If (Self.Lives=0) 
@@ -170,7 +152,30 @@ Public
 	'Method Render:Void(canvas:Canvas) Override
 	'	Super.Render(canvas)
 	'End Method
+
+	Method Destroy:Void(explosionSize:Int)
+		'Destroy
+		Particles.CreateExplosion(Self.Position,explosionSize)
+		Debris.Create(Self.Position)
+		Camera.Shake(10.0)
+
+		'Sound
+		PlaySoundEffect("Explode1",0.50)
 		
+		'Sound
+		Thump.Stop()
+		_thrustChannel.Paused=True
+
+		'Set
+		_status=PlayerStatus.Exploding
+		Self.Visible=False
+		_counter.Restart()
+	End Method
+	
+	Property Status:Int()
+		Return _status
+	End
+	
 Private
 	Method Initialise:Void() Override
 		'Base
@@ -180,9 +185,11 @@ Private
 		_counter=New CounterTimer(200,False)
 		
 		'Other
+		'Self.Scale=New Vec2f(1.2,1.2)
 		Self.Speed=0.07
 		Self.Rotation=0.0
-				
+		Self.Collision=True
+		Self.Radius=5
 		'Reset
 		Self.Reset()
 		Self.Enabled=False
@@ -234,22 +241,12 @@ Private
 		End
 		
 		'Fire?
-		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE")) Bullets.Create(Self,Self.Position,Self.Rotation)
+		If (KeyboardControlHit("FIRE") Or JoystickButtonHit("FIRE")) Bullets.Create(BulletOwner.Player,Self.Position,Self.Rotation)
 		
 		'Position
 		_velocity+=acceleration
 		_velocity*=0.99
 		Self.Position+=_velocity
-	End Method
-
-	Method Destroy:Void(position:Vec2f,explosionSize:Int)
-		'Destroy
-		Particles.CreateExplosion(position,explosionSize)
-		Debris.Create(position)
-		Camera.Shake(10.0)
-
-		'Sound
-		PlaySoundEffect("Explode1",0.50)
 	End Method
 
 	Method IncrementLevel:Void()

@@ -1,9 +1,14 @@
 
+Enum BulletOwner
+	Player=0
+	UFO=1
+End
+
 Class Bullets
 
-	Function Create:Void(owner:ObjectEntity,position:Vec2f,rotation:Float)
+	Function Create:Void(owner:BulletOwner,position:Vec2f,rotation:Float)
 		'Validate
-		If (Total()>4) Return
+		'If (Total()>4) Return
 		 
 		'Create bullet
 		Local bullet:=New BulletEntity(owner,position,rotation)
@@ -23,24 +28,28 @@ Class Bullets
 		If (group=Null) Return 0 
 		Return group.Entities.Count()
 	End Function
-		
+			
 End Class
 
 Class BulletEntity Extends VectorEntity
 
 Private
 	Field _active:Int=45
-	Field _owner:ObjectEntity
+	Field _owner:BulletOwner
 Public
 
-	Method New(owner:ObjectEntity,position:Vec2f,direction:Float)
+	Method New(owner:BulletOwner,position:Vec2f,direction:Float)
 		'Create
 		Self.Initialise(owner,direction)
 		
-		'Position (offset from tip)
-		Local radian:=DegreesToRadians(direction)
-		position.X+=Cos(radian)*8
-		position.Y+=-Sin(radian)*8
+		'Offset
+		If (owner=BulletOwner.Player)
+			Local radian:=DegreesToRadians(direction)
+			position.X+=Cos(radian)*8
+			position.Y+=-Sin(radian)*8
+		End
+		
+		'Position
 		Self.ResetPosition(position.X,position.Y)	
 	End Method
 
@@ -56,50 +65,25 @@ Public
 			Return
 		End
 
-		'Prepare
-		Local state:GameState=Cast<GameState>(GAME.GetState(GAME_STATE))
-
 		'Thrust
 		Local radian:=DegreesToRadians(Self.Direction)
 		Self.X+=Cos(radian)*Self.Speed
 		Self.Y+=-Sin(radian)*Self.Speed
-		
-		'Collision with rocks?
-		Local group:=GetEntityGroup("rocks")
-		If (group<>Null)
-			For Local entity:=Eachin group.Entities
-				'Validate
-				Local rock:=Cast<RockEntity>(entity)
-				If (rock.CheckCollision(Self)) 
+
+		'Collision with objects
+		'Note: For some reason collision will not pickup on bullet/player
+		Select _owner
+			Case BulletOwner.UFO
+				If (Player.Visible And Self.CheckCollision(Player))	'Player.CheckCollision(Self)) 
 					'Explode (and shake)
-					Particles.CreateExplosion(rock.Position,rock.Size)
-					Camera.Shake(2.0)
-					
-					'Score
-					Local score:Int=20
-					If (rock.Size=RockSize.Medium) score=50
-					If (rock.Size=RockSize.Small) score=100
-					Player.Score+=score
-					
-					'Split
-					Rocks.Split(rock)
-					
-					'Sound
-					PlaySoundEffect("Explode"+Int(Rnd(1,4)))
-	
-					'Finalise				
-					RemoveEntity(Self)
-					Return
+					Player.Destroy(2)
+				End			
+			Case BulletOwner.Player
+				If (UFO.Visible And Self.CheckCollision(UFO)) 'UFO.CheckCollision(Self)) 
+					'Explode (and shake)
+					UFO.Destroy()
 				End
-			Next
-		End
-		
-		'Collision with UFO?
-		If (UFO.Visible And UFO.CheckCollision(Self)) 
-			'Remove
-			UFO.Destroy()
-		End
-							
+		End									
 	End Method
 	
 	Method Render:Void(canvas:Canvas) Override
@@ -118,18 +102,34 @@ Public
 		canvas.Color=Color.White
 		canvas.Alpha=1.0
 	End Method
+	
+	Property Owner:BulletOwner()
+		Return _owner
+	End
 
+	'Note: For some reason collision will not pickup on bullet/player
 	Method CheckCollision:Bool(entity:Entity) Override
 		'Validate
-		If (Not Self.Collision) Return False
-		Return Self.PointInPolyCollision(Cast<VectorEntity>(entity))
+		If (Not Self.Collision Or Not entity.Collision) Return False
+		
+		'Prepare
+		Local dx:Float=Self.X-entity.X
+		Local dy:Float=Self.Y-entity.Y
+		Local distance:Float=Sqrt(dx*dx+dy*dy)
+		Local radii:Float=(Self.Radius+entity.Radius)
+		
+		'Validate
+		Return Not (radii<distance)
 	End Method
-	
+		
 Private
-	Method Initialise:Void(owner:ObjectEntity,direction:Float)
+	Method Initialise:Void(owner:BulletOwner,direction:Float)
 		'Points
 		Self.CreatePoint(0,0)
-		Self.CreatePoint(1,1)
+		'Self.CreatePoint(0,4)
+		'Self.CreatePoint(4,4)
+		'Self.CreatePoint(4,0)
+		'Self.CreatePoint(0,0)
 		
 		'Color
 		Self.Color=GetColor(224,224,224)
@@ -139,6 +139,8 @@ Private
 		
 		'Other
 		Self.Speed=9.0
+		Self.Collision=True
+		Self.Radius=3
 		_owner=owner
 		
 		'Reset

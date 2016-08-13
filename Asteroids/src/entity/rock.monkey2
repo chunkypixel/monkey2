@@ -5,15 +5,17 @@ Enum RockSize
 	Small=3
 End
 
+Const ROCKS_START:Int=4
+
 Class Rocks
-	Global MaxRocks:Int=4
+	Global MaxRocks:Int=ROCKS_START
 
 	'Features (Rocks)
 	Function Create:Void(enabled:Bool=False)
 		'Prepare
 		Local counter:Int=0
 	
-		'Testing (postion for direct access)
+		'Testing (position for direct access)
 		'CreateRock(New Vec2f(VirtualResolution.Width/2+100,VirtualResolution.Height/2),RockSize.Small,Rnd(360),0.0,enabled)
 		'Return
 		
@@ -45,6 +47,13 @@ Class Rocks
 		'NOTES: Rocks continue to same general direction
 		'       One rock appears to be move faster than other
 		'       There can only ever be a max of 26 rocks
+
+		'Sound
+		PlaySoundEffect("Explode"+Int(Rnd(1,4)))
+
+		'Explode (and shake)
+		Particles.CreateExplosion(rock.Position,rock.Size)
+		Camera.Shake(2.0)
 					
 		'Can split?
 		If (rock.Size<RockSize.Small)
@@ -130,7 +139,45 @@ Public
 		Local radian:=DegreesToRadians(Self.Direction)
 		Self.X+=Cos(radian)*Self.Speed
 		Self.Y+=-Sin(radian)*Self.Speed
-				
+
+		'Collision with bullets?
+		Local group:=GetEntityGroup("bullets")
+		If (group<>Null) 
+			For Local entity:=Eachin group.Entities
+				'Validate
+				Local bullet:=Cast<BulletEntity>(entity)
+				If (Self.CheckCollision(bullet)) 
+					'Split
+					Rocks.Split(Self)
+
+					'Score?
+					If (bullet.Owner=BulletOwner.Player)
+						Local score:Int=20
+						If (Self.Size=RockSize.Medium) score=50
+						If (Self.Size=RockSize.Small) score=100
+						Player.Score+=score
+					End
+					
+					'Remove
+					Bullets.Remove(bullet)
+				End
+			Next	
+		End
+
+		'Collision with objects
+		If (UFO.Visible And Self.CheckCollision(UFO)) 
+			'Explode (and shake)
+			UFO.Destroy()
+			
+			'Split
+			Rocks.Split(Self)		
+		ElseIf (Player.Visible And Self.CheckCollision(Player))
+			'Explode (and shake)
+			Player.Destroy(Self.Size)
+			
+			'Split
+			Rocks.Split(Self)		
+		End						
 	End Method
 	
 	Property Size:Int()

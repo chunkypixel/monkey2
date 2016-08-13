@@ -51,8 +51,8 @@ Const HIGHSCORE_STATE:Int=2
 'Game layers
 Const LAYER_CAMERA:Int=0
 Const LAYER_ROCKS:Int=1
-Const LAYER_UFO:Int=2
-Const LAYER_BULLETS:Int=3
+Const LAYER_BULLETS:Int=2
+Const LAYER_UFO:Int=3
 Const LAYER_PLAYER:Int=4
 Const LAYER_DEBRIS:Int=5
 

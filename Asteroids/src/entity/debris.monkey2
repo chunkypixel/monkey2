@@ -47,6 +47,7 @@ Private
 		'Other
 		Self.Speed=Rnd(0.5,1.25)
 		Self.Direction=direction
+		Self.Collision=False
 		_rotationSpeed=Rnd(-4,Rnd(4,10))
 		'Self.Scale=New Vec2f(1.0,1.0)	
 	End Method

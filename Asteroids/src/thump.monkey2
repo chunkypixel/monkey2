@@ -8,13 +8,13 @@ Private
 	Field _currentThump:Int
 	Field _channel:Channel
 	Field _rate:Float=0.9
-	Field _delay:CounterTimer
+	Field _delayCounter:CounterTimer
 	Field _running:Bool=False
 Public
 	
 	Method New()
 		'Initialise
-		_delay=New CounterTimer(THUMP_COUNTERSTART)
+		_delayCounter=New CounterTimer(THUMP_COUNTERSTART)
 	End
 	
 	Method Update:Void()
@@ -22,7 +22,7 @@ Public
 		If (_channel=Null Or Not _running) Return
 				
 		'Is Playing?
-		If (Not _channel.Playing And _delay.Elapsed)
+		If (Not _channel.Playing And _delayCounter.Elapsed)
 			'Increment
 			_currentThump=(_currentThump+1) Mod 2
 			Self.Play()
@@ -53,15 +53,15 @@ Private
 		If (_currentThump=1) name="ThumpLo"
 
 		'Validate (delay)
-		_delay.Interval=THUMP_COUNTERSTART
-		If (remainingRocks<=15)	_delay.Interval=(THUMP_COUNTERSTART-(15-remainingRocks)*2)			
+		_delayCounter.Interval=THUMP_COUNTERSTART
+		If (remainingRocks<=15)	_delayCounter.Interval=(THUMP_COUNTERSTART-(15-remainingRocks)*2)			
 		
 		'Sound
 		_channel=PlaySoundEffect(name)
 		_channel.Rate=_rate
 		
 		'Start
-		_delay.Restart()
+		_delayCounter.Restart()
 	End Method
 	
 End Class

@@ -93,13 +93,13 @@ Public
 	
 	Method CheckCollision:Bool(entity:Entity) Override
 		'Validate
-		If (Not Self.Collision) Return False
+		If (Not Self.Collision Or Not entity.Collision) Return False
 		Return Self.OverlapCollision(Cast<VectorEntity>(entity))
 	End Method
 		
 	'Comparision between two objects
 	Method OverlapCollision:Bool(entity:VectorEntity)
-		'Process (object)
+		'Process (Self->Entity)
 		For Local k:Int=0 until entity.Points
 			'Prepare
 			Local ex:Float=entity.RenderPoints[k].x+entity.X
@@ -108,21 +108,7 @@ Public
 			'Validate
 			If (Self.CollisionState(_renderPoints,_points,Self.X,Self.Y,ex,ey)) Return True
 		Next
-		
-		'Process (point)
-		Return Self.PointInPolyCollision(entity)
-		
-		'Process (Double check??)
-		'For Local k:Int=0 until _points
-		'	'Prepare
-		'	Local sx:Float=_renderPoints[k].x+Self.X
-		'	Local sy:Float=_renderPoints[k].y+Self.Y
-		'	
-		'	'Validate
-		'	If (Self.CollisionState(entity.RenderPoints,entity.Points,entity.X,entity.Y,sx,sy)) Return True
-		'Next
-		'Return
-		'Return False	
+		Return False
 	End
 	
 	'Comparison between object and point
@@ -163,7 +149,7 @@ Private
 		Local isColliding:Bool=False
 		
 		'Process
-		For Local i:Int=0 Until totalPoints
+		For Local i:Int=0 To totalPoints-1
 			'Prepare
 			Local xI:Float=points[i].x+x1
 			Local yI:Float=points[i].y+y1
@@ -173,6 +159,7 @@ Private
 			'Validate
 			'https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 			If (((yI>y2)<>(yJ>y2)) And (x2<(xJ-xI)*(y2-yI)/(yJ-yI)+xI)) isColliding=Not isColliding
+			'If ((((yI<=y2) And (y2<yJ)) Or ((yJ<=y2) And (y2<yI))) And (x2<(xJ-xI)*(y2-yI)/(yJ-yI)+xI)) isColliding=Not isColliding 
 			
 			'Store
 			j=i

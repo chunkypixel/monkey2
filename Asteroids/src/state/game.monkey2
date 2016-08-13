@@ -15,7 +15,7 @@ Public
 		
 	Method Enter:Void() Override
 		'Create/reset stuff
-		Rocks.MaxRocks=4
+		Rocks.MaxRocks=ROCKS_START
 
 		'Starfield
 		Starfield.Speed=0.05
