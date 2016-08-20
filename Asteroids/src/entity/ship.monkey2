@@ -18,6 +18,7 @@ Class ShipEntity Extends VectorEntity
 		'Other
 		Self.Rotation=90.0
 		Self.Scale=New Vec2f(0.75,0.75)
+		Self.Color=HUDColor
 		
 		'Reset
 		Self.Reset()

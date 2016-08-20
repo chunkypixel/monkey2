@@ -65,7 +65,9 @@ Public
 	End
 	
 	Method Stop:Void()
+		_counter=0
 		Self.Enabled=False
+		Self.Elapsed=False
 	End
 	
 	Property Counter:Int()

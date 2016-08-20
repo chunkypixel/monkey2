@@ -22,10 +22,12 @@ Public
 		Self.Write(canvas,text,VirtualResolution.Width/2-textLength/2,y,scale)
 	End
 	
-	Method Write:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float)
+	Method Write:Void(canvas:Canvas,text:String,x:Float,y:Float,scale:Float,alpha:Float=1.0)
 		'Canvas
 		canvas.LineWidth=GetLineWidth(2.0)	'For now make all lines >1.0 for smoothing
-		canvas.Color=GetColor(224,224,224,GetAlpha())
+		canvas.Alpha=alpha
+		If (alpha=1.0) canvas.Alpha=GetAlpha()	'Flicker
+		'canvas.Color=GetColor(224,224,224,GetAlpha())
 
 		'Make uppercase (for now)
 		text=text.ToUpper()
@@ -48,7 +50,7 @@ Public
 		Next
 		
 		'Reset
-		canvas.Color=Color.White
+		'canvas.Color=Color.White
 		canvas.Alpha=1.0
 	End
 		

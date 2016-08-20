@@ -5,11 +5,17 @@ Enum BulletOwner
 End
 
 Class Bullets
+Private
+	Global _count:Int=0
+Public
 
 	Function Create:Void(owner:BulletOwner,position:Vec2f,rotation:Float)
 		'Validate
-		'If (Total()>4) Return
-		 
+		If (owner=BulletOwner.Player)
+			If (_count>=4) Return
+			_count+=1
+		End
+			 
 		'Create bullet
 		Local bullet:=New BulletEntity(owner,position,rotation)
 		AddEntity(bullet,LAYER_BULLETS)
@@ -20,14 +26,16 @@ Class Bullets
 	End Function
 	
 	Function Remove:Void(bullet:BulletEntity)
+		'Validate
+		If (bullet.Owner=BulletOwner.Player) _count-=1
 		RemoveEntity(bullet)
 	End Function
 
-	Function Total:Int()
-		Local group:=GetEntityGroup("bullets")
-		If (group=Null) Return 0 
-		Return group.Entities.Count()
-	End Function
+	'Function Total:Int()
+	'	Local group:=GetEntityGroup("bullets")
+	'	If (group=Null) Return 0 
+	'	Return group.Entities.Count()
+	'End Function
 			
 End Class
 

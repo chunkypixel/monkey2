@@ -75,19 +75,17 @@ Public
 		For Local index:Int=1 Until _points
 			'Draw (line)
 			canvas.Alpha=GetAlpha()	'Flicker
-			canvas.DrawLine(dx,dy,(_renderPoints[index].x+Self.X)*VirtualResolution.sx,(_renderPoints[index].y+Self.Y)*VirtualResolution.sy)
-			
+			canvas.DrawLine(dx,dy,(_renderPoints[index].x+Self.X)*VirtualResolution.sx,(_renderPoints[index].y+Self.Y)*VirtualResolution.sy)	
 			'Draw (point)
-			canvas.Alpha=0.8
-			canvas.DrawPoint(Int(dx),Int(dy))
-			
+			'canvas.Alpha=0.8
+			'canvas.DrawPoint(Int(dx),Int(dy))			
 			'Position (for next line)
 			dx=(_renderPoints[index].x+Self.X)*VirtualResolution.sx
 			dy=(_renderPoints[index].y+Self.Y)*VirtualResolution.sy
 		Next
 		
 		'Reset
-		canvas.Color=Color.White
+		'canvas.Color=Color.White
 		canvas.Alpha=1.0
 	End Method
 	

@@ -156,6 +156,8 @@ Public
 						If (Self.Size=RockSize.Medium) score=50
 						If (Self.Size=RockSize.Small) score=100
 						Player.Score+=score
+						'Text
+						'ExplodingText.Create(Self.Position,score)
 					End
 					
 					'Remove
@@ -167,7 +169,7 @@ Public
 		'Collision with objects
 		If (UFO.Visible And Self.CheckCollision(UFO)) 
 			'Explode (and shake)
-			UFO.Destroy()
+			UFO.Destroy(false)
 			
 			'Split
 			Rocks.Split(Self)		
@@ -262,6 +264,7 @@ Private
 		Self.Direction=direction
 
 		'Other
+		Self.Color=RockColor
 		Self.Speed=speed
 		Self.Collision=True
 		_rotationSpeed=Rnd(-2,2)	

@@ -1,3 +1,6 @@
+'Info
+'http://web.archive.org/web/20071222160202/http://www.gamearchive.com/General/Articles/ClassicNews/1981/Esquire2-81-pg63.htm
+
 'Source
 #Import "src/functions"
 #Import "src/scaler"
@@ -19,6 +22,7 @@
 #Import "src/entity/bullet"
 #Import "src/entity/rock"
 #Import "src/entity/debris"
+#Import "src/entity/text"
 'Assets (gfx)
 #Import "assets/gfx/arcade.ttf"
 #Import "assets/gfx/particle.png"
@@ -26,6 +30,7 @@
 #Import "assets/snd/appear.wav"
 #Import "assets/snd/fire.wav"
 #Import "assets/snd/thrust.wav"
+#Import "assets/snd/life.wav"
 #Import "assets/snd/explode1.wav"
 #Import "assets/snd/explode2.wav"
 #Import "assets/snd/explode3.wav"
@@ -34,11 +39,10 @@
 #Import "assets/snd/thumplo.wav"
 #Import "assets/snd/lsaucer.wav"
 #Import "assets/snd/ssaucer.wav"
-
 'System
 #Import "<std>"
 #Import "<mojo>"
-#Import "<game2d>"
+#Import "<wdw-game2d>"
 Using std..
 Using mojo..
 Using wdw.game2d
@@ -54,17 +58,30 @@ Const LAYER_ROCKS:Int=1
 Const LAYER_BULLETS:Int=2
 Const LAYER_UFO:Int=3
 Const LAYER_PLAYER:Int=4
-Const LAYER_DEBRIS:Int=5
+Const LAYER_OTHER:Int=5
 
 Const TITLE:String="ASTEROIDS 2K"
-Const VERSION:String="0.5 10.08.2016"
+Const VERSION:String="0.6 19.08.2016"
+
+'Colors
+Const HUDColor:=Color.FromARGB($ffcccccc)
+Const ShipColor:=Color.FromARGB($ffcccccc)
+Const UFOColor:=Color.FromARGB($ffecccccc)
+Const DebrisColor:=Color.FromARGB($ffcccccc)
+Const ExplosionColor:=Color.FromARGB($ffcccccc)
+Const RockColor:=Color.FromARGB($ffcccccc)
+Const TitleColor:=Color.FromARGB($ffcccccc)
+Const SubTitleColor:=Color.FromARGB($ffcccccc)
+Const MessageColor:=Color.FromARGB($ffcccccc)
 
 Function Main()
 	New AppInstance
 	
 	'Settings
 	Settings.Load()
-	Settings.Save()
+	HighScores.Load()
+	'Settings.Save()
+	'HighScores.Save()
 	
 	'Create game
 	Local screenSize:Vec2i=GetScreenSize()
@@ -122,6 +139,7 @@ Class AsteroidsGame Extends Game2d
 		AddSound("Appear","asset::appear.wav")
 		AddSound("Fire","asset::fire.wav")
 		AddSound("Thrust","asset::thrust.wav")
+		AddSound("Life","asset::life.wav")
 		AddSound("Explode1","asset::explode1.wav")
 		AddSound("Explode2","asset::explode2.wav")
 		AddSound("Explode3","asset::explode3.wav")
@@ -131,7 +149,7 @@ Class AsteroidsGame Extends Game2d
 		AddSound("LSaucer","asset::lsaucer.wav")
 		AddSound("SSaucer","asset::ssaucer.wav")
 		
-		'Create states
+		'Create states and activate
 		AddState(New TitleState,TITLE_STATE)
 		AddState(New GameState,GAME_STATE)
 		AddState(New HighScoreState,HIGHSCORE_STATE)
@@ -143,4 +161,3 @@ Class AsteroidsGame Extends Game2d
 	End Method
 	
 End Class
-

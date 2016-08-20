@@ -30,7 +30,7 @@ Public
 		Camera.Target=anchor
 		Camera.SnapToTarget()
 				
-		'Player
+		'Player (re-init)
 		Player=New PlayerEntity()
 		AddEntity(Player,LAYER_PLAYER,"player")
 		ShipLives=New ShipEntity()
@@ -50,9 +50,9 @@ Public
 	Method Leave:Void() Override
 		'Tidup/save stuff
 		ShipLives=Null
-		UFO=Null
-		Player=Null
-		Camera=Null
+		'UFO=Null
+		'Player=Null
+		'Camera=Null
 		RemoveAllEntities()
 	End Method
 
@@ -68,25 +68,29 @@ Public
 			Case GameStatus.GetReady
 				'Start game?
 				If (_counter.Elapsed)	
-					_status=GameStatus.Play				
+					'Set
+					_status=GameStatus.Play		
 					Player.Enabled=True
-					UFO.Enabled=True
+					UFO.Enabled=False
 				End	
 						
 			Case GameStatus.Play
 				'Game over?
 				If (Not Player.Enabled) 
+					'Set
 					_status=GameStatus.GameOver
 					_counter.Restart()	
-					UFO.Enabled=False
 					Return			
 				End		
 				
 			Case GameStatus.GameOver
 				'Exit game?
 				If (_counter.Elapsed) 
+					'Set
+					UFO.Enabled=False
+					
 					'Validate
-					If (Self.IsHighScore())
+					If (HighScores.IsHighScore(Player.Score))
 						GAME.EnterState(HIGHSCORE_STATE,New TransitionFadein,New TransitionFadeout)				
 					Else
 						GAME.EnterState(TITLE_STATE,New TransitionFadein,New TransitionFadeout)				
@@ -104,9 +108,12 @@ Public
 		Super.Render(canvas,tween)
 
 		'Messages
+		canvas.Color=MessageColor
 		Select _status
 			Case GameStatus.GetReady
 				VectorFont.Write(canvas,"GET READY",150,2.8)		
+			'Case GameStatus.Play
+			'	If (Player.Status=PlayerStatus.Release)	VectorFont.Write(canvas,"GET READY",150,2.8)		
 			Case GameStatus.GameOver
 				VectorFont.Write(canvas,"GAME OVER",150,2.8)
 		End
@@ -118,25 +125,32 @@ Public
 	Method PostRender:Void(canvas:Canvas,tween:Double) Override
 		'Stop shake affecting this layer
 		canvas.ClearMatrix()
-		canvas.Color=Color.White
 
 		'Base
 		Super.PostRender(canvas,tween)
+		canvas.Color=HUDColor
 		
 		'Score
 		Local score:String="0"
 		If (Player.Score>0) score=Player.Score
-		score="        "+score
-		VectorFont.Write(canvas,score.Right(8),154-100,4,2.5)
-		'Length 12.5 - 2.5
-		
+		VectorFont.Write(canvas,("        "+score).Right(8),154-100,4,2.5)	'Length 12.5 - 2.5
+	
 		'High
-		Local highScore:String="10000"
-		If (_highScore>0) highScore=_highScore
-		highScore="        "+highScore
-		VectorFont.Write(canvas,highScore.Right(8),332-60,10,1.5)
-		VectorFont.Write(canvas,"MKS",340,10,1.5)
-		'Length 7.5 - 1.5
+		Local highScore:=Cast<Score>(HighScores.List.Get(0))
+		If (highScore<>Null)
+			VectorFont.Write(canvas,("        "+highScore.Score).Right(8),332-60,10,1.5)
+			VectorFont.Write(canvas,highScore.Name,340,10,1.5) 'Length 7.5 - 1.5		
+		End
+
+		'Level
+		Local level:String="0"+Player.Level
+		VectorFont.Write(canvas,level.Right(2),170,10,1.5)
+		'Remaining
+		Local remaining:String="0"+Rocks.Remaining()
+		VectorFont.Write(canvas,remaining.Right(2),190,10,1.5)
+
+		'Note
+		VectorFont.Write(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",VirtualResolution.Height-20,1.0)				
 
 		'Lives?
 		Local lives:Int=Clamp(Player.Lives,0,7)
@@ -151,20 +165,6 @@ Public
 				x+=15
 			Next
 		End
-		
-		'Level
-		Local level:String="0"+Player.Level
-		VectorFont.Write(canvas,level.Right(2),170,10,1.5)
-		'Remaining
-		Local remaining:String="0"+Rocks.Remaining()
-		VectorFont.Write(canvas,remaining.Right(2),190,10,1.5)
-				
-		'Note
-		VectorFont.Write(canvas,TITLE+" BY CHUNKYPIXEL STUDIOS",VirtualResolution.Height-20,1.0)		
-	End Method
-
-	Method IsHighScore:Bool()
-		Return True
 	End Method
 			
 End Class

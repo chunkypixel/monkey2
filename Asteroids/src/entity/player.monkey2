@@ -21,9 +21,10 @@ Private
 	Field _counter:CounterTimer
 	Field _status:PlayerStatus
 	Field _levelComplete:Bool=False
+	Field _score:Int=0
+	Field _nextLife:Int=10000
 Public
 	Field Lives:Int=MAX_LIVES
-	Field Score:Int=0
 	Field Level:Int=1
 	
 	Method New()
@@ -56,9 +57,9 @@ Public
 		If (Not _levelComplete And Rocks.Remaining()=0 And Not UFO.Released) 
 			'Sound
 			PlaySoundEffect("LevelUp",1.0,2.0)
-			Thump.Stop()
 			
 			'Set
+			Thump.Stop()
 			_levelComplete=True
 			_counter.Restart()
 			
@@ -72,12 +73,12 @@ Public
 				'Prepare
 				Local canRelease:Bool=True		 
 
-				'Validate
+				'Validate (check zone around player)
 				Local group:=GetEntityGroup("rocks")
 				For Local entity:=Eachin group.Entities
-					'Validate (check zone around player)
 					If (InExclusionZone(entity)) canRelease=False
 				Next		
+				If (UFO.Released And InExclusionZone(UFO)) canRelease=False
 				
 				'Can we release?
 				If (canRelease) 
@@ -103,6 +104,9 @@ Public
 				'Sound?
 				If (Not Thump.IsRunning) Thump.Start()
 				
+				'Enable?
+				If (Not UFO.Enabled) UFO.Enabled=True
+				
 				'Process
 				Self.PlayerMovement()
 																		
@@ -121,13 +125,15 @@ Public
 					Self.Enabled=False
 					Return
 				End
+				
+				'Disable?
+				If (Not UFO.Released) UFO.Enabled=False
 						
 				'Restart?
 				If (_counter.Elapsed) 
 					'Set
 					Self.Reset()
 					_status=PlayerStatus.Release
-					
 					'Increment level? (may have exploded on last rock) 			
 					If (_levelComplete) Self.IncrementLevel() 							
 					_levelComplete=False
@@ -136,6 +142,9 @@ Public
 			Case PlayerStatus.Complete
 				'Process
 				Self.PlayerMovement()
+
+				'Disable?
+				If (Not UFO.Released) UFO.Enabled=False
 
 				'Restart?
 				If (_counter.Elapsed) 
@@ -148,10 +157,6 @@ Public
 				End				
 		End
 	End Method
-		
-	'Method Render:Void(canvas:Canvas) Override
-	'	Super.Render(canvas)
-	'End Method
 
 	Method Destroy:Void(explosionSize:Int)
 		'Destroy
@@ -176,6 +181,23 @@ Public
 		Return _status
 	End
 	
+	Property Score:Int()
+		Return _score
+	Setter(value:Int)
+		'Update
+		_score=value
+		
+		'Validate
+		If (Self.Enabled And _score>_nextLife)
+			'Icrement
+			_nextLife+=10000
+			Self.Lives+=1
+			
+			'Sound
+			PlaySoundEffect("Life",1.0)		
+		End
+	End
+	
 Private
 	Method Initialise:Void() Override
 		'Base
@@ -186,6 +208,7 @@ Private
 		
 		'Other
 		'Self.Scale=New Vec2f(1.2,1.2)
+		Self.Color=ShipColor
 		Self.Speed=0.07
 		Self.Rotation=0.0
 		Self.Collision=True
@@ -210,18 +233,14 @@ Private
 		If (KeyboardControlDown("RIGHT")) Self.Rotation-=3
 		' analogue rotation. more is faster turn
 		' a little deadzone of 0.1
-		local value:Float=JoystickAxisValue("TURN")
-		If (value<-0.2) Self.Rotation+=4*Abs(value)
-		If (value>0.2) Self.Rotation-=4*value
+		Local axisValue:Float=JoystickAxisValue("TURN")
+		If (axisValue<-0.2) Self.Rotation+=4*Abs(axisValue)
+		If (axisValue>0.2) Self.Rotation-=4*axisValue
 		' check joy hat
 		' if there is no hat, the value of 0 is returned
-		' so it can be called without problem
 		Local hatValue:JoystickHat=JoystickHatValue(0)
 		If (hatValue=JoystickHat.Left) Self.Rotation+=3
 		If (hatValue=JoystickHat.Right) Self.Rotation-=3
-		'Validate
-		If (Self.Rotation<0) Self.Rotation+=360
-		If (Self.Rotation>360) Self.Rotation-=360
 
 		'Thrust?
 		Local acceleration:=New Vec2f()
@@ -256,10 +275,7 @@ Private
 		Self.Level+=1
 		Rocks.MaxRocks+=2
 		Rocks.MaxRocks=Min(Rocks.MaxRocks,11)
-		
-		'UFO
-		UFO.Restart()
-		
+				
 		'Restart
 		Rocks.Create(True)
 	End Method

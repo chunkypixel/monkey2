@@ -4,7 +4,7 @@ Class Debris
 	Function Create:Void(position:Vec2f)
 		For Local count:Int = 0 Until 10
 			Local debris:=New DebrisEntity(position,Rnd(0,360))
-			AddEntity(debris,LAYER_DEBRIS,"debris")
+			AddEntity(debris,LAYER_OTHER,"debris")
 		Next		
 	End Function
 	
@@ -45,6 +45,7 @@ Private
 		Self.CreatePoint(1,Int(Rnd(4,10)))
 		
 		'Other
+		Self.Color=DebrisColor
 		Self.Speed=Rnd(0.5,1.25)
 		Self.Direction=direction
 		Self.Collision=False

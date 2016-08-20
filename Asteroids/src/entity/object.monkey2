@@ -34,7 +34,7 @@ Public
 	#End
 	Property Enabled:Bool() Virtual
 		Return _enabled
-	Setter( value:Bool )
+	Setter( value:Bool ) Virtual
 		_enabled=value
 	End
 		
@@ -60,6 +60,9 @@ Public
 	Property Rotation:Float()
 		Return _rotation
 	Setter( value:Float )
+		'Validate
+		If (value<0) value+=360
+		If (value>360) value-=360
 		_rotation=value
 	End
 
@@ -68,6 +71,9 @@ Public
 	Property Direction:Float()
 		Return _direction
 	Setter( value:float )
+		'Validate
+		If (value<0) value+=360
+		If (value>360) value-=360
 		_direction=value
 	End
 
